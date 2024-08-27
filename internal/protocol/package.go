@@ -30,7 +30,7 @@ type Package struct {
 // - error: An error object, which is always nil in this implementation.
 //
 // The function uses big-endian encoding to store the length of the DATA segment.
-func (p *Package) Marshal() ([]byte, error) {
+func (p *Package) MarshalBinary() ([]byte, error) {
 	ulen := uint16(len(p.Data))
 
 	dataLength := make([]byte, 2)
@@ -64,7 +64,7 @@ func (p *Package) Marshal() ([]byte, error) {
 //   - It extracts the expected length of the data from the DATA_LENGTH header segment.
 //   - It checks if the actual length of the package is equal or greater when header size plus the DATA_LENGTH.
 //   - It sets the Command and Data fields of the Package struct with the values extracted from the byte slice.
-func (p *Package) Unmarshal(bytes []byte) error {
+func (p *Package) UnmarshalBinary(bytes []byte) error {
 	if VERSION != bytes[0] {
 		return fmt.Errorf("unable to unmarshal package, because the versions doesnt match")
 	}

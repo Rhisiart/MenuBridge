@@ -11,6 +11,34 @@ import (
 func main() {
 	//testingPackage()
 	//testingPackageAndFrameReader()
+	testingFrameWriter()
+}
+
+func testingFrameWriter() {
+	p := &protocol.Package{
+		Command: 'a',
+		Data:    []byte("69:4201"),
+	}
+
+	writer := bytes.NewBuffer(nil)
+
+	fw := protocol.NewFrameWriter(writer)
+	fw.Write(p)
+
+	reader := bytes.NewReader(writer.Bytes())
+	fr := protocol.NewFrameReader(reader)
+
+	b, err := fr.Read()
+
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+	} else {
+		dataLength := int(binary.BigEndian.Uint16(b[2:4]))
+		p.UnmarshalBinary(b)
+
+		fmt.Printf("Length of data = %d \n", dataLength)
+		fmt.Printf("%s \n", p.Data)
+	}
 }
 
 func testingPackageAndFrameReader() {
@@ -19,7 +47,7 @@ func testingPackageAndFrameReader() {
 		Data:    []byte("69:4201"),
 	}
 
-	packageCompress, err := p.Marshal()
+	packageCompress, err := p.MarshalBinary()
 	dLen := int(binary.BigEndian.Uint16(packageCompress[2:4]))
 	fmt.Printf("package length = %d\n", dLen)
 
@@ -45,7 +73,7 @@ func testingPackageAndFrameReader() {
 			fmt.Printf("%s\n", err.Error())
 		} else {
 			dataLength := int(binary.BigEndian.Uint16(b[2:4]))
-			p.Unmarshal(b)
+			p.UnmarshalBinary(b)
 
 			fmt.Printf("Length of data = %d \n", dataLength)
 			fmt.Printf("%s \n", p.Data)

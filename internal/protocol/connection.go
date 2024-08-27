@@ -9,8 +9,8 @@ type Connection struct {
 	Conn        net.Conn
 }
 
-func NewConnection(conn net.Conn, id int) *Connection {
-	return &Connection{
+func NewConnection(conn net.Conn, id int) Connection {
+	return Connection{
 		FrameReader: NewFrameReader(conn),
 		FrameWriter: NewFrameWriter(conn),
 		Id:          id,
@@ -26,7 +26,7 @@ func (conn *Connection) Next() (*Package, error) {
 	}
 
 	var p Package
-	unmarshalErr := p.Unmarshal(frame)
+	unmarshalErr := p.UnmarshalBinary(frame)
 
 	if unmarshalErr != nil {
 		return nil, unmarshalErr
