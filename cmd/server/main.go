@@ -11,7 +11,28 @@ import (
 func main() {
 	//testingPackage()
 	//testingPackageAndFrameReader()
-	testingFrameWriter()
+	//testingFrameWriter()
+	testingServer()
+}
+
+func testingServer() {
+	sv, err := protocol.NewServer(":8080")
+
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+	}
+
+	defer sv.Close()
+	go sv.Start()
+
+	for {
+		pkg := <-sv.Sender
+
+		fmt.Printf("---------------------------------------------------------------\n")
+		fmt.Printf("connection id: %d\n", pkg.Conn.Id)
+		fmt.Printf("package command: %b\n", pkg.Pkg.Command)
+		fmt.Printf("package data: %s\n", pkg.Pkg.Data)
+	}
 }
 
 func testingFrameWriter() {

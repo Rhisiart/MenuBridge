@@ -45,12 +45,18 @@ func (s *Server) Start() error {
 
 		newConn := NewConnection(conn, id)
 
+		fmt.Printf("Connected with id %d\n", id)
+
 		s.mutex.Lock()
 		s.Sockets = append(s.Sockets, newConn)
 		s.mutex.Unlock()
 
 		go readFromConnection(s, &newConn)
 	}
+}
+
+func (s *Server) Close() {
+	s.Listen.Close()
 }
 
 func readFromConnection(sv *Server, conn *Connection) {
