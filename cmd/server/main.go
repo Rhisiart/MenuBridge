@@ -28,7 +28,7 @@ func testingServer() {
 	for {
 		pkg := <-sv.Sender
 
-		fmt.Printf("---------------------------------------------------------------\n")
+		fmt.Printf("-----------------------------------------------------\n")
 		fmt.Printf("connection id: %d\n", pkg.Conn.Id)
 		fmt.Printf("package command: %b\n", pkg.Pkg.Command)
 		fmt.Printf("package data: %s\n", pkg.Pkg.Data)

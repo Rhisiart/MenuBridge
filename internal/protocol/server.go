@@ -38,6 +38,7 @@ func (s *Server) Start() error {
 
 	for {
 		conn, err := s.Listen.Accept()
+		id++
 
 		if err != nil {
 			return fmt.Errorf("error on accepting the connection: %s", err.Error())
