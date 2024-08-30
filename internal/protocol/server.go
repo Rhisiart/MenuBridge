@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-type Sender struct {
+type Socket struct {
 	Pkg  *Package
 	Conn *Connection
 }
@@ -14,7 +14,7 @@ type Sender struct {
 type Server struct {
 	Sockets []Connection
 	Listen  net.Listener
-	Sender  chan Sender
+	Socket  chan Socket
 	mutex   sync.RWMutex
 }
 
@@ -28,13 +28,15 @@ func NewServer(port string) (*Server, error) {
 	return &Server{
 		Listen:  listen,
 		Sockets: make([]Connection, 0, 10),
-		Sender:  make(chan Sender, 10),
+		Socket:  make(chan Socket, 10),
 		mutex:   sync.RWMutex{},
 	}, nil
 }
 
 func (s *Server) Start() error {
 	id := 0
+
+	go s.Hub()
 
 	for {
 		conn, err := s.Listen.Accept()
@@ -56,6 +58,28 @@ func (s *Server) Start() error {
 	}
 }
 
+func (s *Server) Hub() {
+	for {
+		select {
+		case socket := <-s.Socket:
+			switch socket.Pkg.Command {
+			case RESERVATION:
+				s.handleReservation(socket)
+			}
+		}
+	}
+}
+
+func (s *Server) handleReservation(socket Socket) {
+	/*socket.Pkg.Data
+
+
+	customer := database.NewCustomer(1, "Martin Garrix")
+	table := database.NewTable(1, 4)
+	reservation := database.NewReservation(1, customer, table, 4, time.Now().String())*/
+
+}
+
 func (s *Server) Close() {
 	s.Listen.Close()
 }
@@ -69,6 +93,6 @@ func readFromConnection(sv *Server, conn *Connection) {
 			break
 		}
 
-		sv.Sender <- Sender{Pkg: pkg, Conn: conn}
+		sv.Socket <- Socket{Pkg: pkg, Conn: conn}
 	}
 }

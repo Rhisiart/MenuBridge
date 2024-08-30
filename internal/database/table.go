@@ -1,6 +1,13 @@
 package database
 
 type Table struct {
-	Number     int
-	SeatNumber int
+	Id    int
+	Seats int
+}
+
+func NewTable(id int, seats int) *Table {
+	return &Table{
+		Id:    id,
+		Seats: seats,
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"github.com/Rhisiart/MenuBridge/internal/database"
 	"github.com/Rhisiart/MenuBridge/internal/protocol"
 )
 
@@ -12,7 +13,16 @@ func main() {
 	//testingPackage()
 	//testingPackageAndFrameReader()
 	//testingFrameWriter()
-	testingServer()
+	//testingServer()
+
+	b := make([]byte, 0, 19)
+	customer := database.NewCustomer(1, "Martin Garrix")
+
+	b = append(b, byte(customer.Id))
+	b = append(b, []byte(customer.Name)...)
+
+	fmt.Printf("%s\n", b)
+	fmt.Printf("%d\n", len(b))
 }
 
 func testingServer() {
@@ -26,7 +36,7 @@ func testingServer() {
 	go sv.Start()
 
 	for {
-		pkg := <-sv.Sender
+		pkg := <-sv.Socket
 
 		fmt.Printf("-----------------------------------------------------\n")
 		fmt.Printf("connection id: %d\n", pkg.Conn.Id)
