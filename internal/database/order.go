@@ -15,3 +15,11 @@ func NewOrder(numberPerson int, table Table) *Order {
 		Status:       enum.Preparing,
 	}
 }
+
+/*func (o *Order) MarshalBinary() []byte {
+	q := o.Table.MarshalBinary()
+
+	bytes := make([]byte, 0, 1+len(q))
+
+	bytes = append(bytes, byte(o.NumberPerson))
+}*/

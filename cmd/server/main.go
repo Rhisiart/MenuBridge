@@ -15,14 +15,27 @@ func main() {
 	//testingFrameWriter()
 	//testingServer()
 
-	b := make([]byte, 0, 19)
+	var r database.Reservation
+
 	customer := database.NewCustomer(1, "Martin Garrix")
+	table := database.NewTable(1, 4)
+	reservation := database.NewReservation(1, customer, table, 4)
+	reservationBytes := reservation.MarshalBinary()
 
-	b = append(b, byte(customer.Id))
-	b = append(b, []byte(customer.Name)...)
+	for _, b := range reservationBytes {
+		fmt.Printf("%x ", b)
+	}
 
-	fmt.Printf("%s\n", b)
-	fmt.Printf("%d\n", len(b))
+	r.UnmarshalBinary(reservationBytes)
+
+	fmt.Printf("-----------------------------------------------------\n")
+	fmt.Printf("Reservation id: %d\n", r.Id)
+	fmt.Printf("Number of guets: %d\n", r.Guests)
+	fmt.Printf("Table Id: %d\n", r.Table.Id)
+	fmt.Printf("Table Seats occupied: %d\n", r.Table.Seats)
+	fmt.Printf("Customer Id: %d\n", r.Customer.Id)
+	fmt.Printf("Customer Name: %s\n", r.Customer.Name)
+
 }
 
 func testingServer() {

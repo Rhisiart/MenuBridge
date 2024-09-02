@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Rhisiart/MenuBridge/internal/database"
 	"github.com/Rhisiart/MenuBridge/internal/protocol"
 )
 
@@ -19,10 +20,19 @@ func start(id int, wait *sync.WaitGroup) {
 
 	defer client.Close()
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 2; i++ {
+		customer := database.NewCustomer(i+1, "Martin Garrix")
+		table := database.NewTable(i+1, 4)
+		reservation := database.NewReservation(i+1, customer, table, 4)
+		reservationBytes := reservation.MarshalBinary()
+
+		for _, b := range reservationBytes {
+			fmt.Printf("%x ", b)
+		}
+
 		pkg := &protocol.Package{
-			Command: 'a',
-			Data:    []byte(fmt.Sprintf("%d:%d", i, id)),
+			Command: 0,
+			Data:    reservationBytes,
 		}
 
 		time.Sleep(10000)

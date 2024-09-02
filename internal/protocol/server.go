@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"sync"
+
+	"github.com/Rhisiart/MenuBridge/internal/database"
 )
 
 type Socket struct {
@@ -71,13 +73,18 @@ func (s *Server) Hub() {
 }
 
 func (s *Server) handleReservation(socket Socket) {
-	/*socket.Pkg.Data
+	var reservation database.Reservation
 
+	reservation.UnmarshalBinary(socket.Pkg.Data)
 
-	customer := database.NewCustomer(1, "Martin Garrix")
-	table := database.NewTable(1, 4)
-	reservation := database.NewReservation(1, customer, table, 4, time.Now().String())*/
-
+	fmt.Printf("-----------------------------------------------------\n")
+	fmt.Printf("connection id: %d\n", socket.Conn.Id)
+	fmt.Printf("package command: %b\n", socket.Pkg.Command)
+	fmt.Printf("Reservation id: %d\n", reservation.Id)
+	fmt.Printf("Table Id: %d\n", reservation.Table.Id)
+	fmt.Printf("Customer Id: %d\n", reservation.Customer.Id)
+	fmt.Printf("Customer Name: %s\n", reservation.Customer.Name)
+	fmt.Printf("Number of guets: %d\n", reservation.Guests)
 }
 
 func (s *Server) Close() {
