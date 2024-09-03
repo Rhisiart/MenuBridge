@@ -82,9 +82,9 @@ func (s *Server) handleReservation(socket Socket) {
 	fmt.Printf("package command: %b\n", socket.Pkg.Command)
 	fmt.Printf("Reservation id: %d\n", reservation.Id)
 	fmt.Printf("Table Id: %d\n", reservation.Table.Id)
+	fmt.Printf("Number of guets: %d\n", reservation.Guests)
 	fmt.Printf("Customer Id: %d\n", reservation.Customer.Id)
 	fmt.Printf("Customer Name: %s\n", reservation.Customer.Name)
-	fmt.Printf("Number of guets: %d\n", reservation.Guests)
 }
 
 func (s *Server) Close() {

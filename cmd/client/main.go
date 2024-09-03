@@ -26,10 +26,6 @@ func start(id int, wait *sync.WaitGroup) {
 		reservation := database.NewReservation(i+1, customer, table, 4)
 		reservationBytes := reservation.MarshalBinary()
 
-		for _, b := range reservationBytes {
-			fmt.Printf("%x ", b)
-		}
-
 		pkg := &protocol.Package{
 			Command: 0,
 			Data:    reservationBytes,

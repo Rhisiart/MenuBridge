@@ -13,12 +13,14 @@ func main() {
 	//testingPackage()
 	//testingPackageAndFrameReader()
 	//testingFrameWriter()
-	//testingServer()
+	testingServer()
+}
 
+func testingMarshalAndUnMarshalOfReservation() {
 	var r database.Reservation
 
-	customer := database.NewCustomer(1, "Martin Garrix")
-	table := database.NewTable(1, 4)
+	customer := database.NewCustomer(2, "Martin Garrix")
+	table := database.NewTable(3, 5)
 	reservation := database.NewReservation(1, customer, table, 4)
 	reservationBytes := reservation.MarshalBinary()
 
@@ -35,7 +37,6 @@ func main() {
 	fmt.Printf("Table Seats occupied: %d\n", r.Table.Seats)
 	fmt.Printf("Customer Id: %d\n", r.Customer.Id)
 	fmt.Printf("Customer Name: %s\n", r.Customer.Name)
-
 }
 
 func testingServer() {
@@ -47,15 +48,20 @@ func testingServer() {
 
 	defer sv.Close()
 	go sv.Start()
+	go sv.Hub()
 
 	for {
+
+	}
+
+	/*for {
 		pkg := <-sv.Socket
 
 		fmt.Printf("-----------------------------------------------------\n")
 		fmt.Printf("connection id: %d\n", pkg.Conn.Id)
 		fmt.Printf("package command: %b\n", pkg.Pkg.Command)
 		fmt.Printf("package data: %s\n", pkg.Pkg.Data)
-	}
+	}*/
 }
 
 func testingFrameWriter() {

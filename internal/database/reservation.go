@@ -29,8 +29,8 @@ func NewReservation(
 }
 
 func (r *Reservation) MarshalBinary() []byte {
-	customerBytes := r.Customer.MarshalBinary()
 	tableBytes := r.Table.MarshalBinary()
+	customerBytes := r.Customer.MarshalBinary()
 
 	//size := 1 + len(customerBytes) + len(tableBytes) + 1 + len(r.DateTime) + len(r.CreateAt)
 	size := 1 + 1 + len(customerBytes) + len(tableBytes)
@@ -39,8 +39,8 @@ func (r *Reservation) MarshalBinary() []byte {
 
 	bytes = append(bytes, byte(r.Id))
 	bytes = append(bytes, byte(r.Guests))
-	bytes = append(bytes, customerBytes...)
 	bytes = append(bytes, tableBytes...)
+	bytes = append(bytes, customerBytes...)
 	//bytes = append(bytes, []byte(r.DateTime)...)
 	//bytes = append(bytes, []byte(r.CreateAt)...)
 
@@ -50,18 +50,18 @@ func (r *Reservation) MarshalBinary() []byte {
 func (r *Reservation) UnmarshalBinary(data []byte) error {
 	var table Table
 
-	err := table.UnmarshalBinary(data[0:TABLE_SIZE])
+	err := table.UnmarshalBinary(data[2 : TABLE_SIZE+2])
 
 	if err != nil {
-		fmt.Printf("errrrrrrrrrr table")
+		return fmt.Errorf("unable to unmarshal the table")
 	}
 
 	var customer Customer
 
-	err = customer.UnmarshalBinary(data[TABLE_SIZE:])
+	err = customer.UnmarshalBinary(data[TABLE_SIZE+2:])
 
 	if err != nil {
-		fmt.Printf("errrrrrrrrrr customer")
+		return fmt.Errorf("unable to unmarshal the customer")
 	}
 
 	r.Id = int(data[0])
