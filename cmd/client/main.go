@@ -20,39 +20,36 @@ func start(id int, wait *sync.WaitGroup) {
 
 	defer client.Close()
 
-	for i := 0; i < 2; i++ {
-		customer := database.NewCustomer(i+1, "Martin Garrix")
-		table := database.NewTable(i+1, 4)
-		reservation := database.NewReservation(i+1, customer, table, 4)
-		reservationBytes := reservation.MarshalBinary()
+	customer := database.NewCustomer(1, "Martin Garrix")
+	table := database.NewTable(1, 4)
+	reservation := database.NewReservation(1, customer, table, 4)
+	reservationBytes := reservation.MarshalBinary()
 
-		pkg := &protocol.Package{
-			Command: 0,
-			Data:    reservationBytes,
-		}
-
-		time.Sleep(10000)
-
-		b, errMarshalBinary := pkg.MarshalBinary()
-
-		if errMarshalBinary != nil {
-			fmt.Printf("err")
-			return
-		}
-
-		client.Write(b)
+	pkg := &protocol.Package{
+		Command: 0,
+		Data:    reservationBytes,
 	}
 
+	b, errMarshalBinary := pkg.MarshalBinary()
+
+	if errMarshalBinary != nil {
+		fmt.Printf("err")
+		return
+	}
+
+	client.Write(b)
+
+	time.Sleep(100000)
 	wait.Done()
 }
 
 func main() {
 	wait := &sync.WaitGroup{}
 
-	wait.Add(2)
+	wait.Add(1)
 
 	go start(1, wait)
-	go start(2, wait)
+	//go start(2, wait)
 
 	wait.Wait()
 }

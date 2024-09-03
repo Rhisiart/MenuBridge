@@ -63,7 +63,7 @@ func (fr *FrameReader) Read() ([]byte, error) {
 		n, err := fr.Reader.Read(fr.Scratch)
 
 		if err != nil {
-			return nil, fmt.Errorf("error on reading the scratch")
+			return nil, err
 		}
 
 		fr.Previous = append(fr.Previous, fr.Scratch[:n]...)

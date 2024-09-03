@@ -1,11 +1,12 @@
 package protocol
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"sync"
-
-	"github.com/Rhisiart/MenuBridge/internal/database"
+	"syscall"
 )
 
 type Socket struct {
@@ -14,8 +15,8 @@ type Socket struct {
 }
 
 type Server struct {
-	Sockets []Connection
-	Listen  net.Listener
+	sockets []Connection
+	listen  net.Listener
 	Socket  chan Socket
 	mutex   sync.RWMutex
 }
@@ -28,8 +29,8 @@ func NewServer(port string) (*Server, error) {
 	}
 
 	return &Server{
-		Listen:  listen,
-		Sockets: make([]Connection, 0, 10),
+		listen:  listen,
+		sockets: make([]Connection, 0, 10),
 		Socket:  make(chan Socket, 10),
 		mutex:   sync.RWMutex{},
 	}, nil
@@ -38,10 +39,8 @@ func NewServer(port string) (*Server, error) {
 func (s *Server) Start() error {
 	id := 0
 
-	go s.Hub()
-
 	for {
-		conn, err := s.Listen.Accept()
+		conn, err := s.listen.Accept()
 		id++
 
 		if err != nil {
@@ -53,42 +52,47 @@ func (s *Server) Start() error {
 		fmt.Printf("Connected with id %d\n", id)
 
 		s.mutex.Lock()
-		s.Sockets = append(s.Sockets, newConn)
+		s.sockets = append(s.sockets, newConn)
 		s.mutex.Unlock()
 
 		go readFromConnection(s, &newConn)
 	}
 }
 
-func (s *Server) Hub() {
-	for {
-		select {
-		case socket := <-s.Socket:
-			switch socket.Pkg.Command {
-			case RESERVATION:
-				s.handleReservation(socket)
+func (s *Server) Send(pkg *Package) {
+	s.mutex.RLock()
+	removals := make([]int, 0)
+
+	for i, conn := range s.sockets {
+		err := conn.Writer.Write(pkg)
+
+		if err != nil {
+			if errors.Is(err, syscall.EPIPE) {
+				fmt.Printf("connection closed by client %d", i)
+			} else {
+				fmt.Printf("removing due to error: %d, %s", i, err)
 			}
+
+			removals = append(removals, i)
 		}
+	}
+
+	s.mutex.RUnlock()
+
+	if len(removals) > 0 {
+		s.mutex.Lock()
+
+		for i := len(removals) - 1; i >= 0; i-- {
+			idx := removals[i]
+			s.sockets = append(s.sockets[:idx], s.sockets[idx+1:]...)
+		}
+
+		s.mutex.Unlock()
 	}
 }
 
-func (s *Server) handleReservation(socket Socket) {
-	var reservation database.Reservation
-
-	reservation.UnmarshalBinary(socket.Pkg.Data)
-
-	fmt.Printf("-----------------------------------------------------\n")
-	fmt.Printf("connection id: %d\n", socket.Conn.Id)
-	fmt.Printf("package command: %b\n", socket.Pkg.Command)
-	fmt.Printf("Reservation id: %d\n", reservation.Id)
-	fmt.Printf("Table Id: %d\n", reservation.Table.Id)
-	fmt.Printf("Number of guets: %d\n", reservation.Guests)
-	fmt.Printf("Customer Id: %d\n", reservation.Customer.Id)
-	fmt.Printf("Customer Name: %s\n", reservation.Customer.Name)
-}
-
 func (s *Server) Close() {
-	s.Listen.Close()
+	s.listen.Close()
 }
 
 func readFromConnection(sv *Server, conn *Connection) {
@@ -96,7 +100,16 @@ func readFromConnection(sv *Server, conn *Connection) {
 		pkg, err := conn.Next()
 
 		if err != nil {
-			fmt.Errorf("error reading the connection/package")
+			if errors.Is(err, io.EOF) {
+				fmt.Printf("socket received EOF on connection %d\n", conn.Id)
+			} else {
+				fmt.Printf(
+					"received error while reading from socket, on connection %d, error %s\n",
+					conn.Id,
+					err,
+				)
+			}
+
 			break
 		}
 

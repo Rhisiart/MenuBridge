@@ -48,20 +48,20 @@ func testingServer() {
 
 	defer sv.Close()
 	go sv.Start()
-	go sv.Hub()
 
 	for {
-
-	}
-
-	/*for {
-		pkg := <-sv.Socket
+		socket := <-sv.Socket
 
 		fmt.Printf("-----------------------------------------------------\n")
-		fmt.Printf("connection id: %d\n", pkg.Conn.Id)
-		fmt.Printf("package command: %b\n", pkg.Pkg.Command)
-		fmt.Printf("package data: %s\n", pkg.Pkg.Data)
-	}*/
+		fmt.Printf("connection id: %d\n", socket.Conn.Id)
+		fmt.Printf("package command: %b\n", socket.Pkg.Command)
+
+		switch socket.Pkg.Command {
+		case protocol.RESERVATION:
+			protocol.CreateReservation(socket.Pkg.Data)
+			sv.Send(socket.Pkg)
+		}
+	}
 }
 
 func testingFrameWriter() {
