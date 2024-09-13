@@ -96,6 +96,8 @@ func (s *Server) Close() {
 }
 
 func readFromConnection(sv *Server, conn *Connection) {
+	defer conn.Conn.Close()
+
 	for {
 		pkg, err := conn.Next()
 

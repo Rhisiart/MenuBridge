@@ -3,14 +3,12 @@ package main
 import (
 	"fmt"
 	"net"
-	"sync"
-	"time"
 
 	"github.com/Rhisiart/MenuBridge/internal/database"
 	"github.com/Rhisiart/MenuBridge/internal/protocol"
 )
 
-func start(id int, wait *sync.WaitGroup) {
+func start(id int) {
 	client, err := net.Dial("tcp", fmt.Sprintf("127.0.0.%d:8080", id))
 
 	if err != nil {
@@ -38,18 +36,9 @@ func start(id int, wait *sync.WaitGroup) {
 	}
 
 	client.Write(b)
-
-	time.Sleep(100000)
-	wait.Done()
 }
 
 func main() {
-	wait := &sync.WaitGroup{}
-
-	wait.Add(1)
-
-	go start(1, wait)
+	start(1)
 	//go start(2, wait)
-
-	wait.Wait()
 }
