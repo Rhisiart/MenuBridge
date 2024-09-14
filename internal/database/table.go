@@ -1,7 +1,5 @@
 package database
 
-import "github.com/Rhisiart/MenuBridge/types/enum"
-
 type Table struct {
 	Id    int
 	Seats int
@@ -28,8 +26,4 @@ func (t *Table) UnmarshalBinary(data []byte) error {
 	t.Seats = int(data[1])
 
 	return nil
-}
-
-func (t *Table) GetType() int {
-	return enum.Table.GetIndex()
 }

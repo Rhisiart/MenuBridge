@@ -2,8 +2,6 @@ package database
 
 import (
 	"fmt"
-
-	"github.com/Rhisiart/MenuBridge/types/enum"
 )
 
 const TABLE_SIZE = 2
@@ -74,8 +72,4 @@ func (r *Reservation) UnmarshalBinary(data []byte) error {
 	r.Customer = customer
 
 	return nil
-}
-
-func (r *Reservation) GetType() int {
-	return enum.Reservation.GetIndex()
 }

@@ -2,9 +2,6 @@ package database
 
 import (
 	"sync"
-
-	"github.com/Rhisiart/MenuBridge/types"
-	"github.com/Rhisiart/MenuBridge/types/enum"
 )
 
 type Cache struct {
@@ -20,12 +17,14 @@ func NewCache() *Cache {
 	}
 }
 
-func (c *Cache) AddItem(item types.Tables) {
+func (c *Cache) AddItem(item interface{}) {
 	c.mutex.Lock()
 
-	switch item.GetType() {
-	case enum.Reservation:
-		c.reservations = append(c.reservations, item)
+	switch i := item.(type) {
+	case Reservation:
+		c.reservations = append(c.reservations, i)
+	case Order:
+		c.orders = append(c.orders, i)
 	}
 
 	c.mutex.Unlock()

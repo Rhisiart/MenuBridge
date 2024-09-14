@@ -62,6 +62,7 @@ func testingServer() {
 		case protocol.RESERVATION:
 			reservation := protocol.CreateReservation(socket.Pkg.Data)
 
+			go cache.AddItem(reservation)
 			sv.Send(socket.Pkg)
 		}
 	}
