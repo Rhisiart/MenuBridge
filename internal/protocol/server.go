@@ -68,9 +68,9 @@ func (s *Server) Send(pkg *Package) {
 
 		if err != nil {
 			if errors.Is(err, syscall.EPIPE) {
-				fmt.Printf("connection closed by client %d", i)
+				fmt.Printf("connection closed by client %d\n", i)
 			} else {
-				fmt.Printf("removing due to error: %d, %s", i, err)
+				fmt.Printf("removing due to error: %d, %s\n", i, err)
 			}
 
 			removals = append(removals, i)

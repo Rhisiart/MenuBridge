@@ -73,3 +73,12 @@ func (r *Reservation) UnmarshalBinary(data []byte) error {
 
 	return nil
 }
+
+func (r *Reservation) Print() {
+	fmt.Printf("-------------------------------------------------\n")
+	fmt.Printf("Reservation id: %d\n", r.Id)
+	fmt.Printf("Table Id: %d\n", r.Table.id)
+	fmt.Printf("Number of guets: %d\n", r.Guests)
+	fmt.Printf("Customer Id: %d\n", r.Customer.Id)
+	fmt.Printf("Customer Name: %s\n", r.Customer.Name)
+}

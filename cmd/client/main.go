@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"net"
+	"sync"
 
 	"github.com/Rhisiart/MenuBridge/internal/database"
 	"github.com/Rhisiart/MenuBridge/internal/protocol"
 )
 
-func start(id int) {
+func start(id int, wait *sync.WaitGroup) {
 	client, err := net.Dial("tcp", fmt.Sprintf("127.0.0.%d:8080", id))
 
 	if err != nil {
@@ -18,9 +19,9 @@ func start(id int) {
 
 	defer client.Close()
 
-	customer := database.NewCustomer(1, "Martin Garrix")
-	table := database.NewTable(1, 4)
-	reservation := database.NewReservation(1, customer, table, 4)
+	customer := database.NewCustomer(id, "Martin Garrix")
+	table := database.NewTable(id, 4)
+	reservation := database.NewReservation(id, customer, table, 4)
 	reservationBytes := reservation.MarshalBinary()
 
 	pkg := &protocol.Package{
@@ -36,9 +37,17 @@ func start(id int) {
 	}
 
 	client.Write(b)
+	wait.Done()
 }
 
 func main() {
-	start(1)
-	//go start(2, wait)
+	wait := sync.WaitGroup{}
+	wait.Add(200)
+
+	for i := 1; i < 201; i++ {
+		go start(i, &wait)
+	}
+
+	wait.Wait()
+	//start(1)
 }

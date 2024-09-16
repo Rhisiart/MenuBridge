@@ -13,7 +13,20 @@ func main() {
 	//testingPackage()
 	//testingPackageAndFrameReader()
 	//testingFrameWriter()
-	testingServer()
+	//testingServer()
+
+	menu := database.NewMenu(1, "testing", "testingtesting", 20)
+
+	m := menu.MarshalBinary()
+
+	var mn database.Menu
+
+	mn.UnmarshalBinary(m)
+
+	fmt.Printf("Id = %d\n", mn.Id)
+	fmt.Printf("Name = %s\n", mn.Name)
+	fmt.Printf("Description = %s\n", mn.Description)
+	fmt.Printf("Price = %d\n", mn.Price)
 }
 
 func testingMarshalAndUnMarshalOfReservation() {
@@ -30,13 +43,13 @@ func testingMarshalAndUnMarshalOfReservation() {
 
 	r.UnmarshalBinary(reservationBytes)
 
-	fmt.Printf("-----------------------------------------------------\n")
+	/*fmt.Printf("-----------------------------------------------------\n")
 	fmt.Printf("Reservation id: %d\n", r.Id)
 	fmt.Printf("Number of guets: %d\n", r.Guests)
 	fmt.Printf("Table Id: %d\n", r.Table.Id)
-	fmt.Printf("Table Seats occupied: %d\n", r.Table.Seats)
+	fmt.Printf("Table Seats occupied: %d\n", r.Table.)
 	fmt.Printf("Customer Id: %d\n", r.Customer.Id)
-	fmt.Printf("Customer Name: %s\n", r.Customer.Name)
+	fmt.Printf("Customer Name: %s\n", r.Customer.Name)*/
 }
 
 func testingServer() {
@@ -62,7 +75,12 @@ func testingServer() {
 		case protocol.RESERVATION:
 			reservation := protocol.CreateReservation(socket.Pkg.Data)
 
-			go cache.AddItem(reservation)
+			cache.AddItem(reservation)
+			sv.Send(socket.Pkg)
+		case protocol.PLACE:
+			order := protocol.CreateOrder(socket.Pkg.Data)
+
+			cache.AddItem(order)
 			sv.Send(socket.Pkg)
 		}
 	}

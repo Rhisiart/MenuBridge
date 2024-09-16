@@ -24,10 +24,18 @@ type Command struct {
 	size       byte
 }
 
-func CreateReservation(data []byte) *database.Reservation {
+func CreateReservation(data []byte) database.Reservation {
 	var reservation database.Reservation
 
 	reservation.UnmarshalBinary(data)
 
-	return &reservation
+	return reservation
+}
+
+func CreateOrder(data []byte) database.Order {
+	var order database.Order
+
+	order.UnmarshalBinary(data)
+
+	return order
 }

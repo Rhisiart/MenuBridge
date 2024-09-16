@@ -12,8 +12,8 @@ type Cache struct {
 
 func NewCache() *Cache {
 	return &Cache{
-		reservations: make([]Reservation, 10),
-		orders:       make([]Order, 10),
+		reservations: make([]Reservation, 0, 10),
+		orders:       make([]Order, 0, 10),
 	}
 }
 
@@ -23,6 +23,7 @@ func (c *Cache) AddItem(item interface{}) {
 	switch i := item.(type) {
 	case Reservation:
 		c.reservations = append(c.reservations, i)
+		i.Print()
 	case Order:
 		c.orders = append(c.orders, i)
 	}
