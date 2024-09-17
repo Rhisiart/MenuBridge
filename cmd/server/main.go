@@ -13,20 +13,7 @@ func main() {
 	//testingPackage()
 	//testingPackageAndFrameReader()
 	//testingFrameWriter()
-	//testingServer()
-
-	menu := database.NewMenu(1, "testing", "testingtesting", 20)
-
-	m := menu.MarshalBinary()
-
-	var mn database.Menu
-
-	mn.UnmarshalBinary(m)
-
-	fmt.Printf("Id = %d\n", mn.Id)
-	fmt.Printf("Name = %s\n", mn.Name)
-	fmt.Printf("Description = %s\n", mn.Description)
-	fmt.Printf("Price = %d\n", mn.Price)
+	testingServer()
 }
 
 func testingMarshalAndUnMarshalOfReservation() {

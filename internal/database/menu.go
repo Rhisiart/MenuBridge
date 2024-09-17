@@ -1,7 +1,5 @@
 package database
 
-import "fmt"
-
 type Menu struct {
 	Id          int
 	Name        string
@@ -20,14 +18,17 @@ func NewMenu(id int, name string, description string, price int) Menu {
 }
 
 func (m *Menu) MarshalBinary() []byte {
-	b := make([]byte, 0, 1+20+len(m.Description)+1)
+	b := make([]byte, 0, 1+20+50+1)
 
 	name := make([]byte, 20)
-	name = append(name, []byte(m.Name)...)
+	copy(name, []byte(m.Name))
+
+	description := make([]byte, 50)
+	copy(description, []byte(m.Description))
 
 	b = append(b, byte(m.Id))
 	b = append(b, name...)
-	b = append(b, []byte(m.Description)...)
+	b = append(b, description...)
 	b = append(b, byte(m.Price))
 
 	return b
@@ -35,8 +36,6 @@ func (m *Menu) MarshalBinary() []byte {
 
 func (m *Menu) UnmarshalBinary(data []byte) {
 	l := len(data)
-
-	fmt.Printf("data length = %d\n", l)
 
 	m.Id = int(data[0])
 	m.Name = string(data[1:21])
