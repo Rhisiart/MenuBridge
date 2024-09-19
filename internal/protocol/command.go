@@ -7,16 +7,19 @@ import (
 const (
 	RESERVATION = iota
 	PLACE
+	Order
 )
 
 var commandMap = map[string]byte{
 	"reservation": RESERVATION,
 	"place":       PLACE,
+	"order":       Order,
 }
 
 var commandMapLookup = map[byte]string{
 	RESERVATION: "reservation",
 	PLACE:       "place",
+	Order:       "order",
 }
 
 type Command struct {
@@ -38,4 +41,12 @@ func CreateOrder(data []byte) database.Order {
 	order.UnmarshalBinary(data)
 
 	return order
+}
+
+func MakeOrderItem(data []byte) database.OrderItem {
+	var orderItem database.OrderItem
+
+	orderItem.UnmarshalBinary(data)
+
+	return orderItem
 }

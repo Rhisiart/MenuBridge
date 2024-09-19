@@ -8,13 +8,13 @@ type OrderItem struct {
 	price    int
 }
 
-func NewOrderItem(id int, menu Menu, order Order, quantity int, price int) OrderItem {
+func NewOrderItem(id int, menu Menu, order Order, quantity int) OrderItem {
 	return OrderItem{
 		id:       id,
 		menu:     menu,
 		order:    order,
 		quantity: quantity,
-		price:    price,
+		price:    quantity * menu.Price,
 	}
 }
 

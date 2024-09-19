@@ -3,13 +3,12 @@ package main
 import (
 	"fmt"
 	"net"
-	"sync"
 
 	"github.com/Rhisiart/MenuBridge/internal/database"
 	"github.com/Rhisiart/MenuBridge/internal/protocol"
 )
 
-func start(id int, wait *sync.WaitGroup) {
+func start(id int) {
 	client, err := net.Dial("tcp", fmt.Sprintf("127.0.0.%d:8080", id))
 
 	if err != nil {
@@ -19,16 +18,25 @@ func start(id int, wait *sync.WaitGroup) {
 
 	defer client.Close()
 
+	//menu := database.NewMenu(id, "Meat", "Meat", 4)
 	customer := database.NewCustomer(id, "Martin Garrix")
 	table := database.NewTable(id, 4)
+	order := database.NewOrder(id, 2, table, customer)
+	//orderLine := database.NewOrderItem(id, menu, order, 1)
 	reservation := database.NewReservation(id, customer, table, 4)
-	reservationBytes := reservation.MarshalBinary()
 
-	pkg := &protocol.Package{
+	SendPackage(client, &protocol.Package{
 		Command: 0,
-		Data:    reservationBytes,
-	}
+		Data:    reservation.MarshalBinary(),
+	})
 
+	SendPackage(client, &protocol.Package{
+		Command: 1,
+		Data:    order.MarshalBinary(),
+	})
+}
+
+func SendPackage(client net.Conn, pkg *protocol.Package) {
 	b, errMarshalBinary := pkg.MarshalBinary()
 
 	if errMarshalBinary != nil {
@@ -37,17 +45,18 @@ func start(id int, wait *sync.WaitGroup) {
 	}
 
 	client.Write(b)
-	wait.Done()
 }
 
 func main() {
-	wait := sync.WaitGroup{}
+
+	start(1)
+	/*wait := sync.WaitGroup{}
 	wait.Add(200)
 
 	for i := 1; i < 201; i++ {
 		go start(i, &wait)
 	}
 
-	wait.Wait()
+	wait.Wait()*/
 	//start(1)
 }
