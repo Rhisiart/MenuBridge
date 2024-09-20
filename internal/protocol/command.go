@@ -8,18 +8,21 @@ const (
 	RESERVATION = iota
 	PLACE
 	Order
+	Pay
 )
 
 var commandMap = map[string]byte{
 	"reservation": RESERVATION,
 	"place":       PLACE,
 	"order":       Order,
+	"Pay":         Pay,
 }
 
 var commandMapLookup = map[byte]string{
 	RESERVATION: "reservation",
 	PLACE:       "place",
 	Order:       "order",
+	Pay:         "Pay",
 }
 
 type Command struct {
@@ -35,7 +38,7 @@ func CreateReservation(data []byte) database.Reservation {
 	return reservation
 }
 
-func CreateOrder(data []byte) database.Order {
+func GetOrder(data []byte) database.Order {
 	var order database.Order
 
 	order.UnmarshalBinary(data)
@@ -49,4 +52,8 @@ func MakeOrderItem(data []byte) database.OrderItem {
 	orderItem.UnmarshalBinary(data)
 
 	return orderItem
+}
+
+func SendPayment(data []byte) {
+
 }

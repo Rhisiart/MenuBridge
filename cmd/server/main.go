@@ -77,7 +77,7 @@ func testingServer() {
 			cache.AddItem(reservation)
 			sv.Send(socket.Pkg)
 		case protocol.PLACE:
-			order := protocol.CreateOrder(socket.Pkg.Data)
+			order := protocol.GetOrder(socket.Pkg.Data)
 
 			cache.AddItem(order)
 			sv.Send(socket.Pkg)
@@ -86,6 +86,17 @@ func testingServer() {
 
 			cache.AddItem(orderItem)
 			sv.Send(socket.Pkg)
+		case protocol.Pay:
+			order := protocol.GetOrder(socket.Pkg.Data)
+			amount := cache.CalculateOrderAmount(order.Id)
+			payment := database.NewPayment(1, order, amount)
+
+			pkg := &protocol.Package{
+				Command: 3,
+				Data:    payment.MarshalBinary(),
+			}
+
+			sv.Send(pkg)
 		}
 	}
 }

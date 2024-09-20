@@ -35,3 +35,15 @@ func (c *Cache) AddItem(item interface{}) {
 
 	c.mutex.Unlock()
 }
+
+func (c *Cache) CalculateOrderAmount(orderId int) int {
+	amount := 0
+
+	for _, orderItem := range c.orderItems {
+		if orderItem.order.Id == orderId {
+			amount = +orderItem.price
+		}
+	}
+
+	return amount
+}

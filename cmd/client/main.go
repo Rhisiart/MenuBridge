@@ -18,11 +18,11 @@ func start(id int) {
 
 	defer client.Close()
 
-	//menu := database.NewMenu(id, "Meat", "Meat", 4)
+	menu := database.NewMenu(id, "Meat", "Meat", 4)
 	customer := database.NewCustomer(id, "Martin Garrix")
 	table := database.NewTable(id, 4)
 	order := database.NewOrder(id, 2, table, customer)
-	//orderLine := database.NewOrderItem(id, menu, order, 1)
+	orderLine := database.NewOrderItem(id, menu, order, 2)
 	reservation := database.NewReservation(id, customer, table, 4)
 
 	SendPackage(client, &protocol.Package{
@@ -33,6 +33,11 @@ func start(id int) {
 	SendPackage(client, &protocol.Package{
 		Command: 1,
 		Data:    order.MarshalBinary(),
+	})
+
+	SendPackage(client, &protocol.Package{
+		Command: 2,
+		Data:    orderLine.MarshalBinary(),
 	})
 }
 

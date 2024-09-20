@@ -3,7 +3,7 @@ package database
 import "fmt"
 
 type Order struct {
-	id       int
+	Id       int
 	persons  int
 	table    Table
 	customer Customer
@@ -12,7 +12,7 @@ type Order struct {
 
 func NewOrder(id int, persons int, table Table, customer Customer) Order {
 	return Order{
-		id:       id,
+		Id:       id,
 		persons:  persons,
 		table:    table,
 		customer: customer,
@@ -26,7 +26,7 @@ func (o *Order) MarshalBinary() []byte {
 
 	bytes := make([]byte, 0, 1+1+len(q)+len(c))
 
-	bytes = append(bytes, byte(o.id))
+	bytes = append(bytes, byte(o.Id))
 	bytes = append(bytes, byte(o.persons))
 	bytes = append(bytes, q...)
 	bytes = append(bytes, c...)
@@ -51,7 +51,7 @@ func (o *Order) UnmarshalBinary(data []byte) error {
 		return fmt.Errorf("error when unmarshal reservation in order")
 	}
 
-	o.id = int(data[0])
+	o.Id = int(data[0])
 	o.persons = int(data[1])
 	o.customer = c
 	o.table = t
@@ -61,7 +61,7 @@ func (o *Order) UnmarshalBinary(data []byte) error {
 
 func (o *Order) Print() {
 	fmt.Printf("-------------------------------------------------\n")
-	fmt.Printf("Order id: %d\n", o.id)
+	fmt.Printf("Order id: %d\n", o.Id)
 	fmt.Printf("Table Id: %d\n", o.table.id)
 	fmt.Printf("Number of persons: %d\n", o.persons)
 	fmt.Printf("Customer Id: %d\n", o.customer.Id)
