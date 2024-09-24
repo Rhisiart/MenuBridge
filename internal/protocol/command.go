@@ -9,6 +9,7 @@ const (
 	PLACE
 	Order
 	Pay
+	Payment
 )
 
 var commandMap = map[string]byte{
@@ -16,6 +17,7 @@ var commandMap = map[string]byte{
 	"place":       PLACE,
 	"order":       Order,
 	"Pay":         Pay,
+	"Payment":     Payment,
 }
 
 var commandMapLookup = map[byte]string{
@@ -23,6 +25,7 @@ var commandMapLookup = map[byte]string{
 	PLACE:       "place",
 	Order:       "order",
 	Pay:         "Pay",
+	Payment:     "Payment",
 }
 
 type Command struct {

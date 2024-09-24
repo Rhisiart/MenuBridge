@@ -25,10 +25,8 @@ func (c *Cache) AddItem(item interface{}) {
 	switch i := item.(type) {
 	case Reservation:
 		c.reservations = append(c.reservations, i)
-		i.Print()
 	case Order:
 		c.orders = append(c.orders, i)
-		i.Print()
 	case OrderItem:
 		c.orderItems = append(c.orderItems, i)
 	}
@@ -41,7 +39,7 @@ func (c *Cache) CalculateOrderAmount(orderId int) int {
 
 	for _, orderItem := range c.orderItems {
 		if orderItem.order.Id == orderId {
-			amount = +orderItem.price
+			amount += orderItem.price
 		}
 	}
 

@@ -68,7 +68,7 @@ func testingServer() {
 
 		fmt.Printf("---------------------------------------------------\n")
 		fmt.Printf("connection id: %d\n", socket.Conn.Id)
-		fmt.Printf("package command: %b\n", socket.Pkg.Command)
+		fmt.Printf("package command: %d\n", int(socket.Pkg.Command))
 
 		switch socket.Pkg.Command {
 		case protocol.RESERVATION:
@@ -92,7 +92,7 @@ func testingServer() {
 			payment := database.NewPayment(1, order, amount)
 
 			pkg := &protocol.Package{
-				Command: 3,
+				Command: 4,
 				Data:    payment.MarshalBinary(),
 			}
 

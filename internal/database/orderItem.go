@@ -1,5 +1,7 @@
 package database
 
+import "fmt"
+
 type OrderItem struct {
 	id       int
 	menu     Menu
@@ -22,7 +24,7 @@ func (orderItem *OrderItem) MarshalBinary() []byte {
 	m := orderItem.menu.MarshalBinary()
 	o := orderItem.order.MarshalBinary()
 
-	b := make([]byte, 1+len(m)+len(o)+1+1)
+	b := make([]byte, 0, 1+len(m)+len(o)+1+1)
 
 	b = append(b, byte(orderItem.id))
 	b = append(b, m...)
@@ -47,6 +49,12 @@ func (orderItem *OrderItem) UnmarshalBinary(data []byte) {
 	orderItem.id = int(data[0])
 	orderItem.menu = menu
 	orderItem.order = order
-	orderItem.price = int(data[l-2])
-	orderItem.quantity = int(data[l-1])
+	orderItem.quantity = int(data[l-2])
+	orderItem.price = int(data[l-1])
+}
+
+func (orderItem *OrderItem) Print() {
+	fmt.Printf("Order item id: %d\n", orderItem.id)
+	fmt.Printf("price: %d\n", orderItem.price)
+	fmt.Printf("quantity: %d\n", orderItem.quantity)
 }

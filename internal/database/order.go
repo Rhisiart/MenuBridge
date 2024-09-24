@@ -58,12 +58,3 @@ func (o *Order) UnmarshalBinary(data []byte) error {
 
 	return nil
 }
-
-func (o *Order) Print() {
-	fmt.Printf("-------------------------------------------------\n")
-	fmt.Printf("Order id: %d\n", o.Id)
-	fmt.Printf("Table Id: %d\n", o.table.id)
-	fmt.Printf("Number of persons: %d\n", o.persons)
-	fmt.Printf("Customer Id: %d\n", o.customer.Id)
-	fmt.Printf("Customer Name: %s\n", o.customer.Name)
-}
