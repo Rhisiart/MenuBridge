@@ -43,16 +43,46 @@ func (relay *Relay) NewConnections() chan *Connection {
 	return relay.conns
 }
 
-func (relay *Relay) relayRange(listeners []*Connection, data []byte, wait *sync.WaitGroup) {
+func (relay *Relay) BroadcastBatch(listeners []*Connection, data []byte, wait *sync.WaitGroup) {
 	for _, conn := range listeners {
-		conn.msg <- data
-
-		wait.Done()
+		conn.Message(data)
 	}
+
+	wait.Done()
 }
 
-func (relay *Relay) relay(data []byte) {
+func (relay *Relay) Broadcast(data []byte) {
+	select {
+	case relay.msgs <- data:
+	default:
+	}
 
+	relay.mutex.RLock()
+
+	wait := sync.WaitGroup{}
+	batchsize := len(relay.listeners) / (relay.send + 1)
+	batch := make([]*Connection, 0, batchsize)
+
+	for _, listerner := range relay.listeners {
+		if len(batch) == batchsize {
+			wait.Add(1)
+
+			go relay.BroadcastBatch(batch, data, &wait)
+
+			batch = make([]*Connection, 0, batchsize)
+		}
+
+		batch = append(batch, listerner)
+	}
+
+	if len(batch) > 0 {
+		wait.Add(1)
+
+		go relay.BroadcastBatch(batch, data, &wait)
+	}
+
+	wait.Wait()
+	relay.mutex.RUnlock()
 }
 
 func (relay *Relay) remove(id int) {

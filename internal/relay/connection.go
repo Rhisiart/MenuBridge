@@ -1,6 +1,8 @@
 package relay
 
-import "github.com/gorilla/websocket"
+import (
+	"github.com/gorilla/websocket"
+)
 
 type Connection struct {
 	id    int
@@ -26,7 +28,7 @@ func (c *Connection) Read() {
 			break
 		}
 
-		c.relay.relay(data)
+		c.relay.Broadcast(data)
 	}
 
 	c.relay.remove(c.id)
@@ -46,4 +48,11 @@ func (c *Connection) Write() {
 
 	c.relay.remove(c.id)
 	c.conn.Close()
+}
+
+func (c *Connection) Message(data []byte) {
+	select {
+	case c.msg <- data:
+	default:
+	}
 }
