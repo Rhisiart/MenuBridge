@@ -1,6 +1,7 @@
 package relay
 
 import (
+	"fmt"
 	"net/http"
 	"runtime"
 	"sync"
@@ -17,6 +18,11 @@ type Relay struct {
 	listeners map[int]*Connection
 	id        int
 	send      int
+}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 func NewRelay(port uint16, uuid string) *Relay {
@@ -92,8 +98,33 @@ func (relay *Relay) remove(id int) {
 }
 
 func (relay *Relay) add(id int, ws *websocket.Conn) {
+	conn := NewConnection(id, ws, relay)
 
+	relay.mutex.Lock()
+	relay.listeners[id] = conn
+	relay.mutex.Unlock()
+
+	select {
+	case relay.conns <- conn:
+	default:
+	}
+
+	go conn.Read()
+	go conn.Write()
 }
 
 func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+
+	if err != nil {
+		fmt.Println("Error when render a connection")
+		return
+	}
+
+	relay.mutex.Lock()
+	relay.id++
+	id := relay.id
+	relay.mutex.Unlock()
+
+	relay.add(id, conn)
 }
