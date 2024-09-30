@@ -40,6 +40,17 @@ func NewRelay(port uint16, uuid string) *Relay {
 }
 
 func (relay *Relay) Start() {
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		relay.render(w, r)
+	})
+
+	addr := fmt.Sprintf("0.0.0.0:%d", relay.port)
+
+	err := http.ListenAndServe(addr, nil)
+
+	if err != nil {
+		fmt.Printf("error: %s\n", err.Error())
+	}
 }
 
 func (relay *Relay) Messages() chan []byte {
@@ -50,7 +61,7 @@ func (relay *Relay) NewConnections() chan *Connection {
 	return relay.conns
 }
 
-func (relay *Relay) BroadcastBatch(listeners []*Connection, data []byte, wait *sync.WaitGroup) {
+func (relay *Relay) broadcastBatch(listeners []*Connection, data []byte, wait *sync.WaitGroup) {
 	for _, conn := range listeners {
 		conn.Message(data)
 	}
@@ -58,7 +69,7 @@ func (relay *Relay) BroadcastBatch(listeners []*Connection, data []byte, wait *s
 	wait.Done()
 }
 
-func (relay *Relay) Broadcast(data []byte) {
+func (relay *Relay) broadcast(data []byte) {
 	select {
 	case relay.msgs <- data:
 	default:
@@ -74,7 +85,7 @@ func (relay *Relay) Broadcast(data []byte) {
 		if len(batch) == batchsize {
 			wait.Add(1)
 
-			go relay.BroadcastBatch(batch, data, &wait)
+			go relay.broadcastBatch(batch, data, &wait)
 
 			batch = make([]*Connection, 0, batchsize)
 		}
@@ -85,7 +96,7 @@ func (relay *Relay) Broadcast(data []byte) {
 	if len(batch) > 0 {
 		wait.Add(1)
 
-		go relay.BroadcastBatch(batch, data, &wait)
+		go relay.broadcastBatch(batch, data, &wait)
 	}
 
 	wait.Wait()

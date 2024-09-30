@@ -28,7 +28,7 @@ func (c *Connection) Read() {
 			break
 		}
 
-		c.relay.Broadcast(data)
+		c.relay.broadcast(data)
 	}
 
 	c.relay.remove(c.id)
