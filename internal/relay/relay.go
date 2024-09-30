@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"runtime"
 	"sync"
+	"sync/atomic"
 
 	"github.com/gorilla/websocket"
 )
@@ -15,8 +16,8 @@ type Relay struct {
 	msgs      chan []byte
 	conns     chan *Connection
 	mutex     sync.RWMutex
-	listeners map[int]*Connection
-	id        int
+	listeners map[int32]*Connection
+	id        int32
 	send      int
 }
 
@@ -32,7 +33,7 @@ func NewRelay(port uint16, uuid string) *Relay {
 		msgs:      make(chan []byte, 10),
 		conns:     make(chan *Connection, 10),
 		mutex:     sync.RWMutex{},
-		listeners: make(map[int]*Connection),
+		listeners: make(map[int32]*Connection),
 		id:        0,
 		send:      runtime.NumCPU(),
 	}
@@ -91,13 +92,13 @@ func (relay *Relay) Broadcast(data []byte) {
 	relay.mutex.RUnlock()
 }
 
-func (relay *Relay) remove(id int) {
+func (relay *Relay) remove(id int32) {
 	relay.mutex.Lock()
 	delete(relay.listeners, id)
 	relay.mutex.Unlock()
 }
 
-func (relay *Relay) add(id int, ws *websocket.Conn) {
+func (relay *Relay) add(id int32, ws *websocket.Conn) {
 	conn := NewConnection(id, ws, relay)
 
 	relay.mutex.Lock()
@@ -121,10 +122,6 @@ func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	relay.mutex.Lock()
-	relay.id++
-	id := relay.id
-	relay.mutex.Unlock()
-
+	id := atomic.AddInt32(&relay.id, 1)
 	relay.add(id, conn)
 }

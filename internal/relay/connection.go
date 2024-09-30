@@ -5,13 +5,13 @@ import (
 )
 
 type Connection struct {
-	id    int
+	id    int32
 	conn  *websocket.Conn
 	relay *Relay
 	msg   chan []byte
 }
 
-func NewConnection(id int, conn *websocket.Conn, relay *Relay) *Connection {
+func NewConnection(id int32, conn *websocket.Conn, relay *Relay) *Connection {
 	return &Connection{
 		id:    id,
 		conn:  conn,
