@@ -9,7 +9,7 @@ import (
 type RelayDriver struct {
 	url  url.URL
 	uuid string
-	conn *websocket.Conn
+	Conn *websocket.Conn
 }
 
 func NewRelayDriver(host string, path string, uuid string) *RelayDriver {
@@ -23,18 +23,19 @@ func NewRelayDriver(host string, path string, uuid string) *RelayDriver {
 
 func (r *RelayDriver) Connect() error {
 	c, _, err := websocket.DefaultDialer.Dial(r.url.String(), nil)
+
 	if err != nil {
 		return err
 	}
 
-	r.conn = c
+	r.Conn = c
 	return c.WriteMessage(websocket.BinaryMessage, []byte(r.uuid))
 }
 
 func (r *RelayDriver) Relay(data []byte) error {
-	return r.conn.WriteMessage(websocket.BinaryMessage, data)
+	return r.Conn.WriteMessage(websocket.BinaryMessage, data)
 }
 
 func (r *RelayDriver) Close() {
-	r.conn.Close()
+	r.Conn.Close()
 }

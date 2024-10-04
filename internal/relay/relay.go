@@ -2,6 +2,7 @@ package relay
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"runtime"
 	"sync"
@@ -15,8 +16,8 @@ type Relay struct {
 	uuid      string
 	msgs      chan []byte
 	conns     chan *Connection
-	mutex     sync.RWMutex
 	listeners map[int32]*Connection
+	mutex     sync.RWMutex
 	id        int32
 	send      int
 }
@@ -32,19 +33,19 @@ func NewRelay(port uint16, uuid string) *Relay {
 		uuid:      uuid,
 		msgs:      make(chan []byte, 10),
 		conns:     make(chan *Connection, 10),
-		mutex:     sync.RWMutex{},
 		listeners: make(map[int32]*Connection),
+		mutex:     sync.RWMutex{},
 		id:        0,
 		send:      runtime.NumCPU(),
 	}
 }
 
-func (relay *Relay) Start() {
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		relay.render(w, r)
+func (r *Relay) Start() {
+	http.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {
+		r.render(w, req)
 	})
 
-	addr := fmt.Sprintf("0.0.0.0:%d", relay.port)
+	addr := fmt.Sprintf("0.0.0.0:%d", r.port)
 
 	err := http.ListenAndServe(addr, nil)
 
@@ -53,15 +54,15 @@ func (relay *Relay) Start() {
 	}
 }
 
-func (relay *Relay) Messages() chan []byte {
-	return relay.msgs
+func (r *Relay) Messages() chan []byte {
+	return r.msgs
 }
 
-func (relay *Relay) NewConnections() chan *Connection {
-	return relay.conns
+func (r *Relay) NewConnections() chan *Connection {
+	return r.conns
 }
 
-func (relay *Relay) broadcastBatch(listeners []*Connection, data []byte, wait *sync.WaitGroup) {
+func (r *Relay) broadcastBatch(listeners []*Connection, data []byte, wait *sync.WaitGroup) {
 	for _, conn := range listeners {
 		conn.Message(data)
 	}
@@ -69,23 +70,25 @@ func (relay *Relay) broadcastBatch(listeners []*Connection, data []byte, wait *s
 	wait.Done()
 }
 
-func (relay *Relay) broadcast(data []byte) {
+func (r *Relay) broadcast(data []byte) {
+	slog.Warn("Broadcasting....")
+
 	select {
-	case relay.msgs <- data:
+	case r.msgs <- data:
 	default:
 	}
 
-	relay.mutex.RLock()
+	r.mutex.RLock()
 
 	wait := sync.WaitGroup{}
-	batchsize := len(relay.listeners) / (relay.send + 1)
+	batchsize := len(r.listeners) / (r.send + 1)
 	batch := make([]*Connection, 0, batchsize)
 
-	for _, listerner := range relay.listeners {
+	for _, listerner := range r.listeners {
 		if len(batch) == batchsize {
 			wait.Add(1)
 
-			go relay.broadcastBatch(batch, data, &wait)
+			go r.broadcastBatch(batch, data, &wait)
 
 			batch = make([]*Connection, 0, batchsize)
 		}
@@ -96,28 +99,29 @@ func (relay *Relay) broadcast(data []byte) {
 	if len(batch) > 0 {
 		wait.Add(1)
 
-		go relay.broadcastBatch(batch, data, &wait)
+		go r.broadcastBatch(batch, data, &wait)
 	}
 
 	wait.Wait()
-	relay.mutex.RUnlock()
+	r.mutex.RUnlock()
 }
 
-func (relay *Relay) remove(id int32) {
-	relay.mutex.Lock()
-	delete(relay.listeners, id)
-	relay.mutex.Unlock()
+func (r *Relay) remove(id int32) {
+	r.mutex.Lock()
+	delete(r.listeners, id)
+	r.mutex.Unlock()
 }
 
-func (relay *Relay) add(id int32, ws *websocket.Conn) {
-	conn := NewConnection(id, ws, relay)
+func (r *Relay) add(id int32, ws *websocket.Conn) {
+	slog.Warn("New connection with id ", "id", id)
+	conn := NewConnection(id, ws, r)
 
-	relay.mutex.Lock()
-	relay.listeners[id] = conn
-	relay.mutex.Unlock()
+	r.mutex.Lock()
+	r.listeners[id] = conn
+	r.mutex.Unlock()
 
 	select {
-	case relay.conns <- conn:
+	case r.conns <- conn:
 	default:
 	}
 
@@ -125,14 +129,14 @@ func (relay *Relay) add(id int32, ws *websocket.Conn) {
 	go conn.Write()
 }
 
-func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+func (r *Relay) render(w http.ResponseWriter, req *http.Request) {
+	conn, err := upgrader.Upgrade(w, req, nil)
 
 	if err != nil {
 		fmt.Println("Error when render a connection")
 		return
 	}
 
-	id := atomic.AddInt32(&relay.id, 1)
-	relay.add(id, conn)
+	id := atomic.AddInt32(&r.id, 1)
+	r.add(id, conn)
 }

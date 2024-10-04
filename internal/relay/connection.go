@@ -5,7 +5,7 @@ import (
 )
 
 type Connection struct {
-	id    int32
+	Id    int32
 	conn  *websocket.Conn
 	relay *Relay
 	msg   chan []byte
@@ -13,7 +13,7 @@ type Connection struct {
 
 func NewConnection(id int32, conn *websocket.Conn, relay *Relay) *Connection {
 	return &Connection{
-		id:    id,
+		Id:    id,
 		conn:  conn,
 		relay: relay,
 		msg:   make(chan []byte, 10),
@@ -31,7 +31,7 @@ func (c *Connection) Read() {
 		c.relay.broadcast(data)
 	}
 
-	c.relay.remove(c.id)
+	c.relay.remove(c.Id)
 	c.conn.Close()
 }
 
@@ -46,7 +46,7 @@ func (c *Connection) Write() {
 		}
 	}
 
-	c.relay.remove(c.id)
+	c.relay.remove(c.Id)
 	c.conn.Close()
 }
 
