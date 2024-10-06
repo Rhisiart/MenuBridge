@@ -64,7 +64,7 @@ func (r *Relay) NewConnections() chan *Connection {
 
 func (r *Relay) broadcastBatch(listeners []*Connection, data []byte, wait *sync.WaitGroup) {
 	for _, conn := range listeners {
-		conn.Message(data)
+		conn.message(data)
 	}
 
 	wait.Done()
@@ -107,6 +107,8 @@ func (r *Relay) broadcast(data []byte) {
 }
 
 func (r *Relay) remove(id int32) {
+	slog.Warn("Lost the connection with ", "id", id)
+
 	r.mutex.Lock()
 	delete(r.listeners, id)
 	r.mutex.Unlock()
@@ -125,8 +127,8 @@ func (r *Relay) add(id int32, ws *websocket.Conn) {
 	default:
 	}
 
-	go conn.Read()
-	go conn.Write()
+	go conn.read()
+	go conn.write()
 }
 
 func (r *Relay) render(w http.ResponseWriter, req *http.Request) {
