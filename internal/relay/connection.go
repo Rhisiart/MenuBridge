@@ -29,12 +29,12 @@ func (c *Connection) read() {
 		slog.Warn("reading from the message on connection ", "id", c.Id, "message", string(data))
 
 		if err != nil {
-			slog.Warn("error", "method", "read", "error", err.Error())
+			slog.Error("error", "method", "read", "error", err.Error())
 			break
 		}
 
 		if msgType != websocket.BinaryMessage {
-			slog.Warn("The message type instead binary")
+			slog.Error("The message type instead binary", "method", "read", "error", err.Error())
 			break
 		}
 
@@ -56,7 +56,7 @@ func (c *Connection) write() {
 		slog.Warn("writting from the connection", "id", c.Id, "message", string(msg))
 
 		if err != nil {
-			slog.Warn("error", "method", "write", "error", err.Error())
+			slog.Error("error", "method", "write", "error", err.Error())
 			break
 		}
 	}

@@ -16,7 +16,6 @@ func KeepClientAlive(host string, path string, uuid string, msgs chan frame) {
 	client := relay.NewRelayDriver(host, path, uuid)
 
 	err := client.Connect()
-	defer client.Close()
 
 	if err != nil {
 		slog.Error(err.Error())
@@ -42,8 +41,8 @@ func main() {
 	msgs := make(chan frame, 250)
 
 	KeepClientAlive("localhost:8080", "ws", "1", msgs)
-	//KeepClientAlive("localhost:8080", "ws", "2", msgs)
-	//KeepClientAlive("localhost:8080", "ws", "3", msgs)
+	KeepClientAlive("localhost:8080", "ws", "2", msgs)
+	KeepClientAlive("localhost:8080", "ws", "3", msgs)
 
 	writter := relay.NewRelayDriver("localhost:8080", "ws", "4")
 	writter.Connect()
@@ -60,7 +59,7 @@ func main() {
 	for _, message := range messages {
 		writter.Relay([]byte(message))
 
-		for range 1 {
+		for range 3 {
 			select {
 			case msg := <-msgs:
 				slog.Warn("Received message ", "Message", string(msg.msg), "id", msg.uuid)

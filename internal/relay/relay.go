@@ -19,7 +19,7 @@ type Relay struct {
 	listeners map[int32]*Connection
 	mutex     sync.RWMutex
 	id        int32
-	send      int
+	cores     int
 }
 
 var upgrader = websocket.Upgrader{
@@ -36,7 +36,7 @@ func NewRelay(port uint16, uuid string) *Relay {
 		listeners: make(map[int32]*Connection),
 		mutex:     sync.RWMutex{},
 		id:        0,
-		send:      runtime.NumCPU(),
+		cores:     runtime.NumCPU(),
 	}
 }
 
@@ -81,7 +81,7 @@ func (r *Relay) broadcast(data []byte) {
 	r.mutex.RLock()
 
 	wait := sync.WaitGroup{}
-	batchsize := len(r.listeners) / (r.send + 1)
+	batchsize := len(r.listeners) / (r.cores + 1)
 	batch := make([]*Connection, 0, batchsize)
 
 	for _, listerner := range r.listeners {
@@ -135,7 +135,7 @@ func (r *Relay) render(w http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(w, req, nil)
 
 	if err != nil {
-		fmt.Println("Error when render a connection")
+		slog.Error("Error when render a connection", "method", "render", "message", err.Error())
 		return
 	}
 
