@@ -3,13 +3,16 @@ package main
 import (
 	"log/slog"
 
+	"github.com/Rhisiart/MenuBridge/internal/packet"
 	"github.com/Rhisiart/MenuBridge/internal/relay"
 )
 
 func main() {
 	server := relay.NewRelay(8080, "123")
+	framer := packet.NewFramer()
 
 	go server.Start()
+	go framer.Frames(server.Messages())
 
 	for {
 		select {
