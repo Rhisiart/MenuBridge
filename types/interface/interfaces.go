@@ -6,6 +6,6 @@ type Table interface {
 }
 
 type Encoded interface {
-	Encode(data []byte, idx int, seq byte)
+	Encode(data []byte, idx int, seq byte) (int, error)
 	Type() byte
 }

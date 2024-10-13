@@ -1,6 +1,8 @@
 package packet
 
 import (
+	"encoding/binary"
+	"fmt"
 	"log/slog"
 )
 
@@ -10,26 +12,56 @@ const (
 )
 
 type Framer struct {
-	previous []byte
-	scratch  []byte
-	frames   chan *Frame
+	data   []byte
+	frames chan *Package
 }
 
 func NewFramer() *Framer {
 	return &Framer{
-		frames: make(chan *Frame),
+		frames: make(chan *Package),
 	}
 }
 
-func (f *Framer) packages() chan *Frame {
+func (f *Framer) decode() error {
+	if int(f.data[0]) != VERSION {
+		return fmt.Errorf("the version received %d  dont match with %d version", f.data[0], VERSION)
+	}
+
+	if len(f.data) < HEADER_SIZE {
+		return fmt.Errorf("the length of the data is lower than Header size")
+	}
+
+	dataLen := int(binary.BigEndian.Uint16(f.data[3:5]))
+	totalLength := (HEADER_SIZE + dataLen)
+	exceededBytes := len(f.data) - totalLength
+
+	if len(f.data) < totalLength {
+		return nil
+	}
+
+	f.frames <- NewPackage(f.data[1], f.data[2], f.data[HEADER_SIZE:totalLength])
+
+	copy(f.data, f.data[totalLength:])
+
+	f.data = f.data[:exceededBytes]
+
+	return nil
+}
+
+func (f *Framer) NewFrame() chan *Package {
 	return f.frames
 }
 
-func (f *Framer) Frames(frames chan []byte) {
+func (f *Framer) Frames(data chan []byte) {
 	for {
-		select {
-		case frame := <-frames:
-			slog.Warn("Received a frame", "message", frame)
+		if len(f.data) > HEADER_SIZE {
+			err := f.decode()
+
+			if err != nil {
+				slog.Error("fail to decode the package", "message", err.Error())
+			}
 		}
+
+		f.data = append(f.data, <-data...)
 	}
 }
