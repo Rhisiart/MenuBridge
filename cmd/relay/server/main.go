@@ -20,6 +20,8 @@ func main() {
 			slog.Warn("Message is ", "message", msg)
 		case conn := <-server.NewConnections():
 			slog.Warn("Established a new connection with id ", "id", conn.Id)
+		case frame := <-framer.NewFrame():
+			slog.Warn("New frame arrive", "Sequence", frame.Seq, "type", frame.Types(), "Data", frame.Data)
 		}
 	}
 }

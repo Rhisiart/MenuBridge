@@ -22,18 +22,7 @@ func TestDecode(t *testing.T) {
 	go framer.Frames(ch)
 
 	ch <- []byte{packet.VERSION, 3, 0b00001010, 0x00, 0x03, 0x01, 0x02, 0x03}
-	/*require.Nil(t, readFrame(framer))
-	ch <- []byte{3}
-	require.Nil(t, readFrame(framer))
-	ch <- []byte{0b00001010}
-	require.Nil(t, readFrame(framer))
-	ch <- []byte{0x00, 0x03} // length 3
-	require.Nil(t, readFrame(framer))
-	ch <- []byte{0x01}
-	require.Nil(t, readFrame(framer))
-	ch <- []byte{0x02}
-	require.Nil(t, readFrame(framer))
-	ch <- []byte{0x03}*/
+
 	require.Equal(t, packet.NewPackage(3, 0b1010, []byte{0x01, 0x02, 0x03}), readFrame(framer))
 }
 

@@ -71,8 +71,6 @@ func (r *Relay) broadcastBatch(listeners []*Connection, data []byte, wait *sync.
 }
 
 func (r *Relay) broadcast(data []byte) {
-	slog.Warn("Broadcasting....")
-
 	select {
 	case r.msgs <- data:
 	default:
@@ -115,7 +113,6 @@ func (r *Relay) remove(id int32) {
 }
 
 func (r *Relay) add(id int32, ws *websocket.Conn) {
-	slog.Warn("New connection with id ", "id", id)
 	conn := NewConnection(id, ws, r)
 
 	r.mutex.Lock()

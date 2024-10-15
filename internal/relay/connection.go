@@ -26,8 +26,6 @@ func (c *Connection) read() {
 	for {
 		msgType, data, err := c.conn.ReadMessage()
 
-		slog.Warn("reading from the message on connection ", "id", c.Id, "message", string(data))
-
 		if err != nil {
 			slog.Error("error", "method", "read", "error", err.Error())
 			break
@@ -41,8 +39,6 @@ func (c *Connection) read() {
 		c.relay.broadcast(data)
 	}
 
-	slog.Warn("Closing the connection", "id", c.Id, "method", "read")
-
 	c.relay.remove(c.Id)
 	c.conn.Close()
 }
@@ -53,15 +49,11 @@ func (c *Connection) write() {
 
 		err := c.conn.WriteMessage(websocket.BinaryMessage, msg)
 
-		slog.Warn("writting from the connection", "id", c.Id, "message", string(msg))
-
 		if err != nil {
 			slog.Error("error", "method", "write", "error", err.Error())
 			break
 		}
 	}
-
-	slog.Warn("Closing the connection", "id", c.Id, "method", "write")
 
 	c.relay.remove(c.Id)
 	c.conn.Close()

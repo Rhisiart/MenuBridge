@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Rhisiart/MenuBridge/internal/packet"
 	"github.com/Rhisiart/MenuBridge/internal/relay"
 )
 
@@ -37,7 +38,7 @@ func KeepClientAlive(host string, path string, uuid string, msgs chan frame) {
 	return
 }
 
-func main() {
+func runRelayClients() {
 	msgs := make(chan frame, 250)
 
 	KeepClientAlive("localhost:8080", "ws", "1", msgs)
@@ -68,4 +69,27 @@ func main() {
 			}
 		}
 	}
+}
+
+func main() {
+	writter := relay.NewRelayDriver("localhost:8080", "ws", "4")
+	writter.Connect()
+
+	//defer writter.Close()
+	<-time.NewTimer(time.Millisecond * 500).C
+
+	for i := 0; i < 5; i++ {
+		data := make([]byte, 8)
+
+		pkg := packet.NewPackage(byte(2), byte(i), []byte{byte(i), 0x01, 0x02})
+		_, err := pkg.Encode(data, 0, byte(i))
+
+		if err != nil {
+			slog.Error("Fail on encoding the package", "interaction", i)
+		}
+
+		slog.Warn("Version", "Version", data[0])
+		writter.Relay(data)
+	}
+
 }

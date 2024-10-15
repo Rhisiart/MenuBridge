@@ -23,12 +23,12 @@ func NewFramer() *Framer {
 }
 
 func (f *Framer) decode() error {
-	if int(f.data[0]) != VERSION {
-		return fmt.Errorf("the version received %d  dont match with %d version", f.data[0], VERSION)
+	if f.data[0] != VERSION {
+		return fmt.Errorf("the version received %d dont match with %d version", f.data[0], VERSION)
 	}
 
 	if len(f.data) < HEADER_SIZE {
-		return fmt.Errorf("the length of the data is lower than Header size")
+		return nil
 	}
 
 	dataLen := int(binary.BigEndian.Uint16(f.data[3:5]))
@@ -39,6 +39,7 @@ func (f *Framer) decode() error {
 		return nil
 	}
 
+	slog.Warn("Frame decode successfully", "Sequence", f.data[2], "type", f.data[1], "Data", f.data[HEADER_SIZE:totalLength])
 	f.frames <- NewPackage(f.data[1], f.data[2], f.data[HEADER_SIZE:totalLength])
 
 	copy(f.data, f.data[totalLength:])
@@ -55,6 +56,7 @@ func (f *Framer) NewFrame() chan *Package {
 func (f *Framer) Frames(data chan []byte) {
 	for {
 		if len(f.data) > HEADER_SIZE {
+			slog.Warn("Starting to decoding the frame")
 			err := f.decode()
 
 			if err != nil {
