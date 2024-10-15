@@ -75,21 +75,20 @@ func main() {
 	writter := relay.NewRelayDriver("localhost:8080", "ws", "4")
 	writter.Connect()
 
-	//defer writter.Close()
-	<-time.NewTimer(time.Millisecond * 500).C
+	defer writter.Close()
 
 	for i := 0; i < 5; i++ {
 		data := make([]byte, 8)
 
-		pkg := packet.NewPackage(byte(2), byte(i), []byte{byte(i), 0x01, 0x02})
-		_, err := pkg.Encode(data, 0, byte(i))
+		pkg := packet.NewPackage(byte(2), byte(i+1), []byte{byte(i), 0x01, 0x02})
+		_, err := pkg.Encode(data, 0, byte(i+1))
 
 		if err != nil {
 			slog.Error("Fail on encoding the package", "interaction", i)
 		}
 
-		slog.Warn("Version", "Version", data[0])
 		writter.Relay(data)
-	}
 
+		time.Sleep(2 * time.Second)
+	}
 }

@@ -18,6 +18,7 @@ type Framer struct {
 
 func NewFramer() *Framer {
 	return &Framer{
+		data:   make([]byte, 0),
 		frames: make(chan *Package),
 	}
 }
@@ -39,11 +40,8 @@ func (f *Framer) decode() error {
 		return nil
 	}
 
-	slog.Warn("Frame decode successfully", "Sequence", f.data[2], "type", f.data[1], "Data", f.data[HEADER_SIZE:totalLength])
 	f.frames <- NewPackage(f.data[1], f.data[2], f.data[HEADER_SIZE:totalLength])
-
 	copy(f.data, f.data[totalLength:])
-
 	f.data = f.data[:exceededBytes]
 
 	return nil
@@ -56,7 +54,6 @@ func (f *Framer) NewFrame() chan *Package {
 func (f *Framer) Frames(data chan []byte) {
 	for {
 		if len(f.data) > HEADER_SIZE {
-			slog.Warn("Starting to decoding the frame")
 			err := f.decode()
 
 			if err != nil {

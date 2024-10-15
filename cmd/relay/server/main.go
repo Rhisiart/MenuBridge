@@ -2,26 +2,52 @@ package main
 
 import (
 	"log/slog"
+	"os"
+	"runtime"
+	"strconv"
 
 	"github.com/Rhisiart/MenuBridge/internal/packet"
 	"github.com/Rhisiart/MenuBridge/internal/relay"
 )
 
 func main() {
-	server := relay.NewRelay(8080, "123")
-	framer := packet.NewFramer()
+	runtime.GOMAXPROCS(runtime.GOMAXPROCS(0) - 1)
 
-	go server.Start()
-	go framer.Frames(server.Messages())
+	var port uint = 0
+
+	if port == 0 {
+		portStr := os.Getenv("PORT")
+		portEnv, err := strconv.Atoi(portStr)
+		if err == nil {
+			port = uint(portEnv)
+		}
+	}
+
+	uuid := os.Getenv("AUTH_ID")
+
+	slog.Warn("port selected", "port", port)
+	r := relay.NewRelay(uint16(port), uuid)
+
+	go onMessage(r)
+
+	r.Start()
+}
+
+/*func newConnections(relay *relay.Relay) {
+	for {
+		conn := <-relay.NewConnections()
+
+	}
+}*/
+
+func onMessage(relay *relay.Relay) {
+	framer := packet.NewFramer()
+	go framer.Frames(relay.Messages())
 
 	for {
 		select {
-		case msg := <-server.Messages():
-			slog.Warn("Message is ", "message", msg)
-		case conn := <-server.NewConnections():
-			slog.Warn("Established a new connection with id ", "id", conn.Id)
 		case frame := <-framer.NewFrame():
-			slog.Warn("New frame arrive", "Sequence", frame.Seq, "type", frame.Types(), "Data", frame.Data)
+			slog.Warn("received frame", "frame", frame)
 		}
 	}
 }

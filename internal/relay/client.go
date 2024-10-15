@@ -29,7 +29,8 @@ func (r *RelayDriver) Connect() error {
 	}
 
 	r.Conn = c
-	return c.WriteMessage(websocket.BinaryMessage, []byte(r.uuid))
+	//return c.WriteMessage(websocket.BinaryMessage, []byte(r.uuid))
+	return nil
 }
 
 func (r *RelayDriver) Relay(data []byte) error {
