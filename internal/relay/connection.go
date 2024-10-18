@@ -32,7 +32,7 @@ func (c *Connection) read() {
 		}
 
 		if msgType != websocket.BinaryMessage {
-			slog.Error("The message type instead binary", "method", "read", "error", err.Error())
+			slog.Error("The message type is not binary", "method", "read")
 			break
 		}
 

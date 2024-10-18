@@ -12,37 +12,37 @@ const (
 )
 
 type Framer struct {
-	data   []byte
+	buf    []byte
 	frames chan *Package
 }
 
 func NewFramer() *Framer {
 	return &Framer{
-		data:   make([]byte, 0),
+		buf:    make([]byte, 0),
 		frames: make(chan *Package),
 	}
 }
 
 func (f *Framer) decode() error {
-	if f.data[0] != VERSION {
-		return fmt.Errorf("the version received %d dont match with %d version", f.data[0], VERSION)
+	if f.buf[0] != VERSION {
+		return fmt.Errorf("the version received %d dont match with %d version", f.buf[0], VERSION)
 	}
 
-	if len(f.data) < HEADER_SIZE {
+	if len(f.buf) < HEADER_SIZE {
 		return nil
 	}
 
-	dataLen := int(binary.BigEndian.Uint16(f.data[3:5]))
+	dataLen := int(binary.BigEndian.Uint16(f.buf[3:5]))
 	totalLength := (HEADER_SIZE + dataLen)
-	exceededBytes := len(f.data) - totalLength
+	exceededBytes := len(f.buf) - totalLength
 
-	if len(f.data) < totalLength {
+	if len(f.buf) < totalLength {
 		return nil
 	}
 
-	f.frames <- NewPackage(f.data[1], f.data[2], f.data[HEADER_SIZE:totalLength])
-	copy(f.data, f.data[totalLength:])
-	f.data = f.data[:exceededBytes]
+	f.frames <- NewPackage(f.buf[1], f.buf[2], f.buf[HEADER_SIZE:totalLength])
+	copy(f.buf, f.buf[totalLength:])
+	f.buf = f.buf[:exceededBytes]
 
 	return nil
 }
@@ -53,7 +53,7 @@ func (f *Framer) NewFrame() chan *Package {
 
 func (f *Framer) Frames(data chan []byte) {
 	for {
-		if len(f.data) > HEADER_SIZE {
+		if len(f.buf) > HEADER_SIZE {
 			err := f.decode()
 
 			if err != nil {
@@ -61,6 +61,6 @@ func (f *Framer) Frames(data chan []byte) {
 			}
 		}
 
-		f.data = append(f.data, <-data...)
+		f.buf = append(f.buf, <-data...)
 	}
 }

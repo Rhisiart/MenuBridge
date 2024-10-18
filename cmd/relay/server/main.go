@@ -18,6 +18,7 @@ func main() {
 	if port == 0 {
 		portStr := os.Getenv("PORT")
 		portEnv, err := strconv.Atoi(portStr)
+
 		if err == nil {
 			port = uint(portEnv)
 		}
@@ -29,16 +30,18 @@ func main() {
 	r := relay.NewRelay(uint16(port), uuid)
 
 	go onMessage(r)
+	go newConnections(r)
 
 	r.Start()
 }
 
-/*func newConnections(relay *relay.Relay) {
+func newConnections(relay *relay.Relay) {
 	for {
 		conn := <-relay.NewConnections()
 
+		slog.Warn("New connection", "Id", conn.Id)
 	}
-}*/
+}
 
 func onMessage(relay *relay.Relay) {
 	framer := packet.NewFramer()

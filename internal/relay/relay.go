@@ -25,6 +25,9 @@ type Relay struct {
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 func NewRelay(port uint16, uuid string) *Relay {
@@ -45,7 +48,7 @@ func (r *Relay) Start() {
 		r.render(w, req)
 	})
 
-	addr := fmt.Sprintf("0.0.0.0:%d", r.port)
+	addr := fmt.Sprintf(":%d", r.port)
 
 	err := http.ListenAndServe(addr, nil)
 
