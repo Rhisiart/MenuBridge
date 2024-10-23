@@ -23,6 +23,11 @@ func NewConnection(id int32, conn *websocket.Conn, relay *Relay) *Connection {
 }
 
 func (c *Connection) read() {
+	defer func() {
+		c.relay.remove(c.Id)
+		c.conn.Close()
+	}()
+
 	for {
 		msgType, data, err := c.conn.ReadMessage()
 
@@ -38,25 +43,30 @@ func (c *Connection) read() {
 
 		c.relay.broadcast(data)
 	}
-
-	c.relay.remove(c.Id)
-	c.conn.Close()
 }
 
 func (c *Connection) write() {
+	defer func() {
+		c.relay.remove(c.Id)
+		c.conn.Close()
+	}()
+
 	for {
-		msg := <-c.msg
+		msg, ok := <-c.msg
+
+		if !ok {
+			slog.Error("Closing the channel or no more data", "method", "write", "id", c.Id)
+			c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+			break
+		}
 
 		err := c.conn.WriteMessage(websocket.BinaryMessage, msg)
 
 		if err != nil {
-			slog.Error("error", "method", "write", "error", err.Error())
+			slog.Error("Writting error", "method", "write", "error", err.Error())
 			break
 		}
 	}
-
-	c.relay.remove(c.Id)
-	c.conn.Close()
 }
 
 func (c *Connection) message(data []byte) {

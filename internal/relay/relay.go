@@ -107,6 +107,12 @@ func (r *Relay) broadcast(data []byte) {
 	r.mutex.RUnlock()
 }
 
+func (r *Relay) Send(listenersId int32, data []byte) {
+	if conn, ok := r.listeners[listenersId]; ok {
+		conn.message(data)
+	}
+}
+
 func (r *Relay) remove(id int32) {
 	slog.Warn("Lost the connection with ", "id", id)
 

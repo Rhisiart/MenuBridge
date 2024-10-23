@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log/slog"
 	"os"
 	"runtime"
@@ -48,9 +49,30 @@ func onMessage(relay *relay.Relay) {
 	go framer.Frames(relay.Messages())
 
 	for {
-		select {
-		case frame := <-framer.NewFrame():
-			slog.Warn("received frame", "frame", frame)
+		frame := <-framer.NewFrame()
+		slog.Warn("received frame", "frame", frame)
+
+		switch frame.Types() {
+		case 2:
+			slog.Warn("Sending the menus", "Command", 2)
+
+			jsonData, err := json.Marshal([]string{"bitoque", "bacalhau com natas"})
+
+			if err != nil {
+				slog.Error("Couldnt marshal the menus", "error", err.Error())
+				return
+			}
+
+			data := make([]byte, 37)
+			pkg := packet.NewPackage(byte(2), byte(1), jsonData)
+			_, errEncode := pkg.Encode(data, 0, byte(1))
+
+			if errEncode != nil {
+				slog.Error("Couldnt encode the package", "error", errEncode.Error())
+				return
+			}
+
+			relay.Send(1, data)
 		}
 	}
 }

@@ -32,7 +32,7 @@ func EncodeHeader(data []byte, idx int, t byte, seq byte) {
 
 func (p *Package) Encode(data []byte, idx int, seq byte) (int, error) {
 	if len(data) > HEADER_SIZE+len(p.Data) {
-		return -1, fmt.Errorf("the buffer doent have enough sace for the frame header and data")
+		return -1, fmt.Errorf("the buffer doent have enough space for the frame header and data")
 	}
 
 	EncodeHeader(data, idx, p.Types(), seq)

@@ -89,6 +89,6 @@ func main() {
 
 		writter.Relay(data)
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
