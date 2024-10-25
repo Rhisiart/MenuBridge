@@ -3,22 +3,37 @@ package relay
 import (
 	"log/slog"
 
+	"github.com/Rhisiart/MenuBridge/internal/packet"
 	"github.com/gorilla/websocket"
 )
 
 type Connection struct {
-	Id    int32
-	conn  *websocket.Conn
-	relay *Relay
-	msg   chan []byte
+	Id          int32
+	conn        *websocket.Conn
+	relay       *Relay
+	frameReader *packet.Framer
+	data        chan []byte
+	msg         chan []byte
 }
 
 func NewConnection(id int32, conn *websocket.Conn, relay *Relay) *Connection {
 	return &Connection{
-		Id:    id,
-		conn:  conn,
-		relay: relay,
-		msg:   make(chan []byte, 10),
+		Id:          id,
+		conn:        conn,
+		relay:       relay,
+		frameReader: packet.NewFramer(),
+		data:        make(chan []byte, 10),
+		msg:         make(chan []byte, 10),
+	}
+}
+
+func (c *Connection) readFrames() {
+	go c.frameReader.Frames(c.data)
+
+	for {
+		frame := <-c.frameReader.NewFrame()
+
+		c.relay.transport(c.Id, frame)
 	}
 }
 
@@ -41,7 +56,7 @@ func (c *Connection) read() {
 			break
 		}
 
-		c.relay.broadcast(data)
+		c.data <- data
 	}
 }
 

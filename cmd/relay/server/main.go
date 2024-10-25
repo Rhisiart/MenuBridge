@@ -45,14 +45,12 @@ func newConnections(relay *relay.Relay) {
 }
 
 func onMessage(relay *relay.Relay) {
-	framer := packet.NewFramer()
-	go framer.Frames(relay.Messages())
-
 	for {
-		frame := <-framer.NewFrame()
-		slog.Warn("received frame", "frame", frame)
+		frame := <-relay.Packages()
 
-		switch frame.Types() {
+		slog.Warn("received frame", "Connection", frame.ConnId, "frame", frame.Pkg.Data)
+
+		switch frame.Pkg.Types() {
 		case 2:
 			slog.Warn("Sending the menus", "Command", 2)
 
@@ -72,7 +70,7 @@ func onMessage(relay *relay.Relay) {
 				return
 			}
 
-			relay.Send(1, data)
+			relay.Send(frame.ConnId, data)
 		}
 	}
 }

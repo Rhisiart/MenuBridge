@@ -8,13 +8,19 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/Rhisiart/MenuBridge/internal/packet"
 	"github.com/gorilla/websocket"
 )
+
+type Sender struct {
+	ConnId int32
+	Pkg    *packet.Package
+}
 
 type Relay struct {
 	port      uint16
 	uuid      string
-	msgs      chan []byte
+	pkgs      chan Sender
 	conns     chan *Connection
 	listeners map[int32]*Connection
 	mutex     sync.RWMutex
@@ -34,7 +40,7 @@ func NewRelay(port uint16, uuid string) *Relay {
 	return &Relay{
 		port:      port,
 		uuid:      uuid,
-		msgs:      make(chan []byte, 10),
+		pkgs:      make(chan Sender, 10),
 		conns:     make(chan *Connection, 10),
 		listeners: make(map[int32]*Connection),
 		mutex:     sync.RWMutex{},
@@ -57,12 +63,19 @@ func (r *Relay) Start() {
 	}
 }
 
-func (r *Relay) Messages() chan []byte {
-	return r.msgs
+func (r *Relay) Packages() chan Sender {
+	return r.pkgs
 }
 
 func (r *Relay) NewConnections() chan *Connection {
 	return r.conns
+}
+
+func (r *Relay) transport(connId int32, pkg *packet.Package) {
+	select {
+	case r.pkgs <- Sender{ConnId: connId, Pkg: pkg}:
+	default:
+	}
 }
 
 func (r *Relay) broadcastBatch(listeners []*Connection, data []byte, wait *sync.WaitGroup) {
@@ -73,12 +86,7 @@ func (r *Relay) broadcastBatch(listeners []*Connection, data []byte, wait *sync.
 	wait.Done()
 }
 
-func (r *Relay) broadcast(data []byte) {
-	select {
-	case r.msgs <- data:
-	default:
-	}
-
+func (r *Relay) Broadcast(data []byte) {
 	r.mutex.RLock()
 
 	wait := sync.WaitGroup{}
@@ -135,6 +143,7 @@ func (r *Relay) add(id int32, ws *websocket.Conn) {
 
 	go conn.read()
 	go conn.write()
+	go conn.readFrames()
 }
 
 func (r *Relay) render(w http.ResponseWriter, req *http.Request) {
