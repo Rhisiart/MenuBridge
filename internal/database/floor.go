@@ -1,27 +1,32 @@
 package database
 
 type Floor struct {
-	id   int
-	name string
+	Id     int     `json:"id"`
+	Name   string  `json:"name"`
+	Tables []Table `json:"tables"`
 }
 
 func NewFloor(id int, name string) Floor {
 	return Floor{
-		id:   id,
-		name: name,
+		Id:   id,
+		Name: name,
 	}
 }
 
-func (f *Floor) MarshalBinary() []byte {
-	b := make([]byte, 0, 1+len(f.name))
+func (f *Floor) AddTables(tables []Table) {
+	f.Tables = tables
+}
 
-	b = append(b, byte(f.id))
-	b = append(b, f.name...)
+func (f *Floor) MarshalBinary() []byte {
+	b := make([]byte, 0, 1+len(f.Name))
+
+	b = append(b, byte(f.Id))
+	b = append(b, f.Name...)
 
 	return b
 }
 
 func (f *Floor) UnmarshalBinary(data []byte) {
-	f.id = int(data[0])
-	f.name = string(data[1:])
+	f.Id = int(data[0])
+	f.Name = string(data[1:])
 }

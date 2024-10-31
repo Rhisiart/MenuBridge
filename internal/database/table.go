@@ -1,31 +1,31 @@
 package database
 
 type Table struct {
-	id       int
+	Id       int `json:"id"`
 	floorId  int
-	capacity int
+	Capacity int `json:"capacity"`
 }
 
 func NewTable(id int, floorId int, capacity int) Table {
 	return Table{
-		id:       id,
+		Id:       id,
 		floorId:  floorId,
-		capacity: capacity,
+		Capacity: capacity,
 	}
 }
 
 func (t *Table) MarshalBinary() []byte {
 	bytes := make([]byte, 0, 2)
 
-	bytes = append(bytes, byte(t.id))
-	bytes = append(bytes, byte(t.capacity))
+	bytes = append(bytes, byte(t.Id))
+	bytes = append(bytes, byte(t.Capacity))
 
 	return bytes
 }
 
 func (t *Table) UnmarshalBinary(data []byte) error {
-	t.id = int(data[0])
-	t.capacity = int(data[1])
+	t.Id = int(data[0])
+	t.Capacity = int(data[1])
 
 	return nil
 }
