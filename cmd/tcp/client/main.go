@@ -24,7 +24,7 @@ func start(id int) {
 	menu := database.NewMenu(id, "Meat", "Meat", 4)
 	pizza := database.NewMenu(2, "Pizza", "Pizza", 2)
 	customer := database.NewCustomer(id, "Martin Garrix")
-	table := database.NewTable(id, 4)
+	table := database.NewTable(id, 1, 4)
 	order := database.NewOrder(id, 2, table, customer)
 	orderLine := database.NewOrderItem(id, menu, order, 2)
 	orderLinePizza := database.NewOrderItem(id, pizza, order, 3)

@@ -143,6 +143,7 @@ func (r *Relay) add(id int32, ws *websocket.Conn) {
 
 	go conn.read()
 	go conn.write()
+	go conn.frameReader.Frames()
 	go conn.readFrames()
 }
 

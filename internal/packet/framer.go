@@ -13,12 +13,14 @@ const (
 
 type Framer struct {
 	buf    []byte
+	Data   chan []byte
 	frames chan *Package
 }
 
 func NewFramer() *Framer {
 	return &Framer{
 		buf:    make([]byte, 0),
+		Data:   make(chan []byte, 10),
 		frames: make(chan *Package),
 	}
 }
@@ -51,8 +53,13 @@ func (f *Framer) NewFrame() chan *Package {
 	return f.frames
 }
 
-func (f *Framer) Frames(data chan []byte) {
+func (f *Framer) Frames() {
 	for {
+		data := <-f.Data
+		slog.Warn("Receiving a frame", "data", data, "Buffer", len(f.buf))
+
+		f.buf = append(f.buf, data...)
+
 		if len(f.buf) > HEADER_SIZE {
 			err := f.decode()
 
@@ -60,7 +67,5 @@ func (f *Framer) Frames(data chan []byte) {
 				slog.Error("fail to decode the package", "message", err.Error())
 			}
 		}
-
-		f.buf = append(f.buf, <-data...)
 	}
 }

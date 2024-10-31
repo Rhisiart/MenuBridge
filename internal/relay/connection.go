@@ -12,7 +12,6 @@ type Connection struct {
 	conn        *websocket.Conn
 	relay       *Relay
 	frameReader *packet.Framer
-	data        chan []byte
 	msg         chan []byte
 }
 
@@ -22,14 +21,11 @@ func NewConnection(id int32, conn *websocket.Conn, relay *Relay) *Connection {
 		conn:        conn,
 		relay:       relay,
 		frameReader: packet.NewFramer(),
-		data:        make(chan []byte, 10),
 		msg:         make(chan []byte, 10),
 	}
 }
 
 func (c *Connection) readFrames() {
-	go c.frameReader.Frames(c.data)
-
 	for {
 		frame := <-c.frameReader.NewFrame()
 
@@ -46,6 +42,8 @@ func (c *Connection) read() {
 	for {
 		msgType, data, err := c.conn.ReadMessage()
 
+		slog.Warn("Receiver a new message", "message", data)
+
 		if err != nil {
 			slog.Error("error", "method", "read", "error", err.Error())
 			break
@@ -56,7 +54,7 @@ func (c *Connection) read() {
 			break
 		}
 
-		c.data <- data
+		c.frameReader.Data <- data
 	}
 }
 

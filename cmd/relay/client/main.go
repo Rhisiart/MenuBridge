@@ -78,14 +78,9 @@ func main() {
 	defer writter.Close()
 
 	for i := 0; i < 5; i++ {
-		data := make([]byte, 8)
 
 		pkg := packet.NewPackage(byte(2), byte(i+1), []byte{byte(i), 0x01, 0x02})
-		_, err := pkg.Encode(data, 0, byte(i+1))
-
-		if err != nil {
-			slog.Error("Fail on encoding the package", "interaction", i)
-		}
+		data := pkg.Encode(0, byte(i+1))
 
 		writter.Relay(data)
 

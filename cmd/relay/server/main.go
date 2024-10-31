@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log/slog"
 	"os"
 	"runtime"
@@ -50,27 +49,25 @@ func onMessage(relay *relay.Relay) {
 
 		slog.Warn("received frame", "Connection", frame.ConnId, "frame", frame.Pkg.Data)
 
-		switch frame.Pkg.Types() {
-		case 2:
-			slog.Warn("Sending the menus", "Command", 2)
+		data, broadcast, err := packet.HandleEvent(frame.Pkg)
 
-			jsonData, err := json.Marshal([]string{"bitoque", "bacalhau com natas"})
-
-			if err != nil {
-				slog.Error("Couldnt marshal the menus", "error", err.Error())
-				return
-			}
-
-			data := make([]byte, 37)
-			pkg := packet.NewPackage(byte(2), byte(1), jsonData)
-			_, errEncode := pkg.Encode(data, 0, byte(1))
-
-			if errEncode != nil {
-				slog.Error("Couldnt encode the package", "error", errEncode.Error())
-				return
-			}
-
-			relay.Send(frame.ConnId, data)
+		if err != nil {
+			slog.Error(
+				"Could not handle the event",
+				"Command",
+				frame.Pkg.Types(),
+				"err",
+				err.Error())
 		}
+
+		pkg := packet.NewPackage(frame.Pkg.Types(), byte(1), data)
+		pkgEncoded := pkg.Encode(0, byte(1))
+
+		if broadcast {
+			relay.Broadcast(pkgEncoded)
+		} else {
+			relay.Send(frame.ConnId, pkgEncoded)
+		}
+
 	}
 }

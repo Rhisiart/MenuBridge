@@ -2,12 +2,14 @@ package database
 
 type Table struct {
 	id       int
+	floorId  int
 	capacity int
 }
 
-func NewTable(id int, capacity int) Table {
+func NewTable(id int, floorId int, capacity int) Table {
 	return Table{
 		id:       id,
+		floorId:  floorId,
 		capacity: capacity,
 	}
 }
