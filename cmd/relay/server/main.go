@@ -2,10 +2,10 @@ package main
 
 import (
 	"log/slog"
-	"os"
 	"runtime"
-	"strconv"
 
+	"github.com/Rhisiart/MenuBridge/internal/config"
+	"github.com/Rhisiart/MenuBridge/internal/database"
 	"github.com/Rhisiart/MenuBridge/internal/packet"
 	"github.com/Rhisiart/MenuBridge/internal/relay"
 )
@@ -13,21 +13,25 @@ import (
 func main() {
 	runtime.GOMAXPROCS(runtime.GOMAXPROCS(0) - 1)
 
-	var port uint = 0
+	config, err := config.NewConfiguration()
+	uuid := "1"
 
-	if port == 0 {
-		portStr := os.Getenv("PORT")
-		portEnv, err := strconv.Atoi(portStr)
-
-		if err == nil {
-			port = uint(portEnv)
-		}
+	if err != nil {
+		slog.Error("Unable to get the environment variables", "Error", err.Error())
+		return
 	}
 
-	uuid := os.Getenv("AUTH_ID")
+	db := database.NewDatabase(config.DatabaseUrl)
+	err = db.Connect()
+	defer db.Close()
 
-	slog.Warn("port selected", "port", port)
-	r := relay.NewRelay(uint16(port), uuid)
+	if err != nil {
+		slog.Error("Unable to connect to the database", "Error", err.Error())
+		return
+	}
+
+	slog.Warn("port selected", "port", config.Port)
+	r := relay.NewRelay(uint16(config.Port), uuid)
 
 	go onMessage(r)
 	go newConnections(r)
