@@ -1,8 +1,10 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 
+	types "github.com/Rhisiart/MenuBridge/types/interface"
 	_ "github.com/lib/pq"
 )
 
@@ -34,6 +36,26 @@ func (db *Database) Connect() error {
 	return nil
 }
 
-func (db *Database) Close() {
-	db.database.Close()
+func (db *Database) Create(ctx context.Context, operation types.Table) error {
+	return operation.Create(ctx, db.database)
+}
+
+func (db *Database) Read(ctx context.Context, operation types.Table) error {
+	return operation.Read(ctx, db.database)
+}
+
+func (db *Database) ReadAll(ctx context.Context, operation types.Table, list []types.Table) error {
+	return operation.ReadAll(ctx, db.database, list)
+}
+
+func (db *Database) Update(ctx context.Context, operation types.Table) error {
+	return operation.Update(ctx, db.database)
+}
+
+func (db *Database) Delete(ctx context.Context, operation types.Table) error {
+	return operation.Delete(ctx, db.database)
+}
+
+func (db *Database) Close() error {
+	return db.database.Close()
 }

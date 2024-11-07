@@ -1,9 +1,12 @@
 package packet
 
 import (
+	"context"
 	"encoding/json"
+	"log/slog"
 
 	"github.com/Rhisiart/MenuBridge/internal/database"
+	types "github.com/Rhisiart/MenuBridge/types/interface"
 )
 
 const (
@@ -16,28 +19,31 @@ const (
 	Payment
 )
 
-func HandleEvent(pkg *Package) ([]byte, bool, error) {
+func HandleEvent(
+	db *database.Database,
+	ctx context.Context,
+	pkg *Package) ([]byte, bool, error) {
 	switch pkg.Types() {
 	case Menu:
 		return nil, false, nil
 	case Floor:
-		floor := database.NewFloor(1, "Ground Floor")
-		floor2 := database.NewFloor(2, "1st Floor")
-		floor3 := database.NewFloor(3, "2nd Floor")
-		floor4 := database.NewFloor(4, "3nd Floor")
-		floor5 := database.NewFloor(5, "Rooftop")
+		var f database.Floor
+		var floors []types.Table
 
-		desk := database.NewTable(1, 1, 4)
-		deskTwo := database.NewTable(2, 1, 5)
-		deskThree := database.NewTable(3, 1, 6)
+		err := db.ReadAll(ctx, f, floors)
 
-		floor.AddTables([]database.Table{desk, deskTwo})
-		floor2.AddTables([]database.Table{desk, deskTwo, deskThree})
-		floor3.AddTables([]database.Table{desk, deskTwo})
-		floor4.AddTables([]database.Table{desk, deskTwo})
-		floor5.AddTables([]database.Table{desk, deskTwo})
+		if err != nil {
+			slog.Error(
+				"Unable to getting the floor and tables",
+				"Error",
+				err.Error())
 
-		data, err := json.Marshal([]database.Floor{floor, floor2, floor3, floor4, floor5})
+			return nil, false, err
+		}
+
+		data, err := json.Marshal(floors)
+
+		slog.Warn("The data is", "floors", data)
 
 		return data, false, err
 	default:

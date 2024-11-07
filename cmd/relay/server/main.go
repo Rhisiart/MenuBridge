@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"runtime"
 
@@ -13,6 +14,7 @@ import (
 func main() {
 	runtime.GOMAXPROCS(runtime.GOMAXPROCS(0) - 1)
 
+	ctx := context.Background()
 	config, err := config.NewConfiguration()
 	uuid := "1"
 
@@ -33,7 +35,7 @@ func main() {
 	slog.Warn("port selected", "port", config.Port)
 	r := relay.NewRelay(uint16(config.Port), uuid)
 
-	go onMessage(r)
+	go onMessage(r, db, ctx)
 	go newConnections(r)
 
 	r.Start()
@@ -47,13 +49,13 @@ func newConnections(relay *relay.Relay) {
 	}
 }
 
-func onMessage(relay *relay.Relay) {
+func onMessage(relay *relay.Relay, db *database.Database, ctx context.Context) {
 	for {
 		frame := <-relay.Packages()
 
 		slog.Warn("received frame", "Connection", frame.ConnId, "frame", frame.Pkg.Data)
 
-		data, broadcast, err := packet.HandleEvent(frame.Pkg)
+		data, broadcast, err := packet.HandleEvent(db, ctx, frame.Pkg)
 
 		if err != nil {
 			slog.Error(
