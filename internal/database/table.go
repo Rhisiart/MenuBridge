@@ -1,14 +1,14 @@
 package database
 
 type Table struct {
-	id       int `json:"id"`
-	number   int `json:"number"`
-	capacity int `json:"capacity"`
+	Id       int `json:"id,omitempty"`
+	Number   int `json:"number,omitempty"`
+	Capacity int `json:"capacity,omitempty"`
 }
 
 func NewTable(id int, capacity int) Table {
 	return Table{
-		id:       id,
-		capacity: capacity,
+		Id:       id,
+		Capacity: capacity,
 	}
 }

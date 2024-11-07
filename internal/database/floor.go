@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	types "github.com/Rhisiart/MenuBridge/types/interface"
 )
@@ -10,7 +11,7 @@ import (
 type Floor struct {
 	Id     int     `json:"id"`
 	Name   string  `json:"name"`
-	Tables []uint8 `json:"tables"`
+	Tables []Table `json:"tables,omitempty"`
 }
 
 func NewFloor(id int, name string) Floor {
@@ -28,7 +29,7 @@ func (f Floor) Read(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (f Floor) ReadAll(ctx context.Context, db *sql.DB, list []types.Table) error {
+func (f Floor) ReadAll(ctx context.Context, db *sql.DB, list *[]types.Table) error {
 	query := `SELECT 
 				f.id,
 				f.name,
@@ -42,9 +43,9 @@ func (f Floor) ReadAll(ctx context.Context, db *sql.DB, list []types.Table) erro
 				) AS Tables
 			FROM 
 				Floor f
-			LEFT JOIN 
+			INNER JOIN 
 				floor_diningtable t ON f.id = t.floorid
-			LEFT JOIN
+			INNER JOIN
 				diningtable dt ON dt.id = t.diningtableid
 			GROUP BY 
 				f.id, f.name
@@ -60,13 +61,18 @@ func (f Floor) ReadAll(ctx context.Context, db *sql.DB, list []types.Table) erro
 	defer rows.Close()
 
 	for rows.Next() {
+		var tables []byte
 		newFloor := new(Floor)
 
-		if err := rows.Scan(&newFloor.Id, &newFloor.Name, &newFloor.Tables); err != nil {
+		if err := rows.Scan(&newFloor.Id, &newFloor.Name, &tables); err != nil {
 			return err
 		}
 
-		list = append(list, newFloor)
+		if err := json.Unmarshal(tables, &newFloor.Tables); err != nil {
+			return err
+		}
+
+		*list = append(*list, newFloor)
 	}
 
 	return nil

@@ -55,7 +55,7 @@ func onMessage(relay *relay.Relay, db *database.Database, ctx context.Context) {
 
 		slog.Warn("received frame", "Connection", frame.ConnId, "frame", frame.Pkg.Data)
 
-		data, broadcast, err := packet.HandleEvent(db, ctx, frame.Pkg)
+		data, broadcast, err := frame.Pkg.Execute(db, ctx)
 
 		if err != nil {
 			slog.Error(

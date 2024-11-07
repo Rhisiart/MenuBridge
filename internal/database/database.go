@@ -44,7 +44,7 @@ func (db *Database) Read(ctx context.Context, operation types.Table) error {
 	return operation.Read(ctx, db.database)
 }
 
-func (db *Database) ReadAll(ctx context.Context, operation types.Table, list []types.Table) error {
+func (db *Database) ReadAll(ctx context.Context, operation types.Table, list *[]types.Table) error {
 	return operation.ReadAll(ctx, db.database, list)
 }
 
