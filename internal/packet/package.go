@@ -78,8 +78,6 @@ func (p *Package) Execute(
 
 		data, err := json.Marshal(floors)
 
-		slog.Warn("The data is", "floors", data)
-
 		return data, false, err
 	default:
 		return nil, false, nil

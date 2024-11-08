@@ -51,10 +51,11 @@ func NewRelay(port uint16, uuid string) *Relay {
 
 func (r *Relay) Start() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {
+		slog.Warn("received a connection")
 		r.render(w, req)
 	})
 
-	addr := fmt.Sprintf(":%d", r.port)
+	addr := fmt.Sprintf("0.0.0.0:%d", r.port)
 
 	err := http.ListenAndServe(addr, nil)
 
@@ -156,5 +157,7 @@ func (r *Relay) render(w http.ResponseWriter, req *http.Request) {
 	}
 
 	id := atomic.AddInt32(&r.id, 1)
+
+	slog.Warn("New connection", "id", id)
 	r.add(id, conn)
 }
