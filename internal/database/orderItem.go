@@ -5,7 +5,7 @@ type OrderItem struct {
 	menu     Menu
 	order    Order
 	quantity int
-	price    int
+	price    float32
 }
 
 func NewOrderItem(id int, menu Menu, order Order, quantity int) OrderItem {
@@ -14,6 +14,6 @@ func NewOrderItem(id int, menu Menu, order Order, quantity int) OrderItem {
 		menu:     menu,
 		order:    order,
 		quantity: quantity,
-		price:    quantity * menu.Price,
+		price:    float32(quantity) * menu.Price,
 	}
 }

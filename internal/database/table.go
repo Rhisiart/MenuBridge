@@ -12,3 +12,7 @@ func NewTable(id int, capacity int) Table {
 		Capacity: capacity,
 	}
 }
+
+func (t *Table) Unmarshal(data []byte) {
+
+}

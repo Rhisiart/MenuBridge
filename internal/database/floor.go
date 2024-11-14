@@ -29,7 +29,7 @@ func (f Floor) Read(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (f Floor) ReadAll(ctx context.Context, db *sql.DB, list *[]types.Table) error {
+func (f Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
 	query := `SELECT 
 				f.id,
 				f.name,
@@ -55,27 +55,29 @@ func (f Floor) ReadAll(ctx context.Context, db *sql.DB, list *[]types.Table) err
 	rows, err := db.QueryContext(ctx, query)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer rows.Close()
+
+	var list []types.Table
 
 	for rows.Next() {
 		var tables []byte
 		newFloor := new(Floor)
 
 		if err := rows.Scan(&newFloor.Id, &newFloor.Name, &tables); err != nil {
-			return err
+			return nil, err
 		}
 
 		if err := json.Unmarshal(tables, &newFloor.Tables); err != nil {
-			return err
+			return nil, err
 		}
 
-		*list = append(*list, newFloor)
+		list = append(list, newFloor)
 	}
 
-	return nil
+	return list, nil
 }
 
 func (f Floor) Update(ctx context.Context, db *sql.DB) error {

@@ -7,7 +7,6 @@ import (
 	"log/slog"
 
 	"github.com/Rhisiart/MenuBridge/internal/database"
-	types "github.com/Rhisiart/MenuBridge/types/interface"
 )
 
 const (
@@ -16,13 +15,14 @@ const (
 )
 
 const (
-	RESERVATION = iota
-	Menu
-	Floor
+	OPEN = iota
+	MENU
+	FLOOR
+	RESERVATION
 	PLACE
-	Order
-	Pay
-	Payment
+	ORDER
+	PAY
+	PAYMENT
 )
 
 type Package struct {
@@ -59,17 +59,31 @@ func (p *Package) Execute(
 	db *database.Database,
 	ctx context.Context) ([]byte, bool, error) {
 	switch p.Types() {
-	case Menu:
-		return nil, false, nil
-	case Floor:
-		var f database.Floor
-		var floors []types.Table
+	case MENU:
+		var m database.Category
 
-		err := db.ReadAll(ctx, f, &floors)
+		menus, err := db.ReadAll(ctx, m)
 
 		if err != nil {
 			slog.Error(
-				"Unable to getting the floor and tables",
+				"Unable to getting the categories and menus",
+				"Error",
+				err.Error())
+
+			return nil, false, err
+		}
+
+		data, err := json.Marshal(menus)
+
+		return data, false, err
+	case FLOOR:
+		var f database.Floor
+
+		floors, err := db.ReadAll(ctx, f)
+
+		if err != nil {
+			slog.Error(
+				"Unable to get the floor and tables",
 				"Error",
 				err.Error())
 
@@ -77,6 +91,26 @@ func (p *Package) Execute(
 		}
 
 		data, err := json.Marshal(floors)
+
+		return data, false, err
+	case ORDER:
+		order := &database.Order{}
+
+		order.Unmarshal(p.Data)
+		err := db.Read(ctx, order)
+
+		if err != nil {
+			slog.Error(
+				"Unable to get the order",
+				"Error",
+				err.Error())
+
+			return nil, false, err
+		}
+
+		data, err := json.Marshal(order)
+
+		slog.Warn("Sending data...", "data", data)
 
 		return data, false, err
 	default:
