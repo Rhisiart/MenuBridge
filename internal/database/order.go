@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"log/slog"
 
 	types "github.com/Rhisiart/MenuBridge/types/interface"
 )
@@ -12,7 +11,7 @@ type Order struct {
 	Id         int `json:"id"`
 	tableId    int
 	floorId    int
-	Amount     []uint8 `json:"amount"`
+	Amount     float64 `json:"amount"`
 	Statuscode string  `json:"statuscode"`
 	customer   Customer
 }
@@ -29,11 +28,11 @@ func (o *Order) Unmarshal(data []byte) {
 	o.tableId = int(data[1])
 }
 
-func (o Order) Create(ctx context.Context, db *sql.DB) error {
+func (o *Order) Create(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (o Order) Read(ctx context.Context, db *sql.DB) error {
+func (o *Order) Read(ctx context.Context, db *sql.DB) error {
 	query := `SELECT o.id, o.amount, o.statuscode
 				FROM
 					customerorder o
@@ -61,8 +60,6 @@ func (o Order) Read(ctx context.Context, db *sql.DB) error {
 		&o.Amount,
 		&o.Statuscode)
 
-	slog.Warn("Retrieved the order with column", "id", o.Id, "amount", o.Amount, "status", o.Statuscode)
-
 	if err != nil {
 		return err
 	}
@@ -70,14 +67,14 @@ func (o Order) Read(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (o Order) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
+func (o *Order) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
 	return nil, nil
 }
 
-func (o Order) Update(ctx context.Context, db *sql.DB) error {
+func (o *Order) Update(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (o Order) Delete(ctx context.Context, db *sql.DB) error {
+func (o *Order) Delete(ctx context.Context, db *sql.DB) error {
 	return nil
 }
