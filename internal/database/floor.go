@@ -38,7 +38,13 @@ func (f Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
 						'id', dt.id,
 						'number', t.number,
 						'capacity', dt.capacity,
-						'status', t.Statuscode
+						'status', t.Statuscode,
+						'order', (
+							SELECT JSON_BUILD_OBJECT('id', o.id)
+							FROM customerorder o
+							INNER JOIN floor_diningtable ft ON ft.id = o.floortableid
+							WHERE ft.floorid = f.id AND ft.diningtableid = dt.id
+						)
 					)
 				) AS Tables
 			FROM 
@@ -50,7 +56,7 @@ func (f Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
 			GROUP BY 
 				f.id, f.name
 			ORDER BY
-				f.id;`
+				f.id`
 
 	rows, err := db.QueryContext(ctx, query)
 

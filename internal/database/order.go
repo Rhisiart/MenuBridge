@@ -8,12 +8,8 @@ import (
 )
 
 type Order struct {
-	Id         int `json:"id"`
-	tableId    int
-	floorId    int
-	Amount     float64 `json:"amount"`
-	Statuscode string  `json:"statuscode"`
-	customer   Customer
+	Id       int `json:"id"`
+	customer Customer
 }
 
 func NewOrder(id int, customer Customer) Order {
@@ -24,8 +20,7 @@ func NewOrder(id int, customer Customer) Order {
 }
 
 func (o *Order) Unmarshal(data []byte) {
-	o.floorId = int(data[0])
-	o.tableId = int(data[1])
+	o.Id = int(data[0])
 }
 
 func (o *Order) Create(ctx context.Context, db *sql.DB) error {
@@ -33,37 +28,6 @@ func (o *Order) Create(ctx context.Context, db *sql.DB) error {
 }
 
 func (o *Order) Read(ctx context.Context, db *sql.DB) error {
-	query := `SELECT o.id, o.amount, o.statuscode
-				FROM
-					customerorder o
-				INNER JOIN
-					floor_diningtable ft 
-				ON 
-					ft.id = o.floortableid
-				INNER JOIN 
-					floor f
-				ON 
-					f.id = ft.floorid
-				INNER JOIN
-					diningtable t
-				ON
-					t.id = ft.diningtableid        
-				WHERE
-					t.id = $1 AND f.id = $2`
-
-	err := db.QueryRowContext(
-		ctx,
-		query,
-		o.tableId,
-		o.floorId).Scan(
-		&o.Id,
-		&o.Amount,
-		&o.Statuscode)
-
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 

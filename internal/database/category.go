@@ -9,9 +9,10 @@ import (
 )
 
 type Category struct {
-	Id    int    `json:"id"`
-	Name  string `json:"name"`
-	Menus []Menu `json:"menus"`
+	Id      int    `json:"id"`
+	Name    string `json:"name"`
+	Menus   []Menu `json:"menus"`
+	OrderId int    `json:"orderId,omitempty"`
 }
 
 func NewCategory(id int, name string) *Category {
@@ -38,20 +39,30 @@ func (c Category) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error
 						'id', m.id,
 						'name', m.name,
 						'description', m.description,
-						'price', m.price
+						'price', m.price,
+						'orderItem', (
+							SELECT JSON_BUILD_OBJECT(
+								'id', oi.id,
+								'quantity', oi.quantity)
+							FROM orderitem oi    
+							INNER JOIN customerorder o ON o.id = oi.customerorderid 
+							WHERE oi.menuid = m.id AND o.id = $1
+						)
 					)
 					ORDER BY m.name
 				) AS Menus
-				FROM 
-					category c
-				INNER JOIN 
-					menu m  ON c.id = m.categoryid
-				GROUP BY 
-					c.id, c.name
-				ORDER BY
-					c.id;`
+			FROM 
+				category c
+			INNER JOIN 
+				menu m ON m.categoryid = c.id
+			WHERE 
+				c.id IS NOT NULL
+			GROUP BY 
+				c.id, c.name
+			ORDER BY 
+				c.id`
 
-	rows, err := db.QueryContext(ctx, query)
+	rows, err := db.QueryContext(ctx, query, c.OrderId)
 
 	if err != nil {
 		return nil, err

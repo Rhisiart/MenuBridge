@@ -60,7 +60,12 @@ func (p *Package) Execute(
 	ctx context.Context) ([]byte, bool, error) {
 	switch p.Types() {
 	case MENU:
-		var m database.Category
+		order := &database.Order{}
+
+		order.Unmarshal(p.Data)
+		m := &database.Category{
+			OrderId: order.Id,
+		}
 
 		menus, err := db.ReadAll(ctx, m)
 
