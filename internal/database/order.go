@@ -8,8 +8,9 @@ import (
 )
 
 type Order struct {
-	Id       int `json:"id"`
-	customer Customer
+	Id        int `json:"id"`
+	customer  Customer
+	OrderItem []OrderItem `json:"orderItems"`
 }
 
 func NewOrder(id int, customer Customer) Order {

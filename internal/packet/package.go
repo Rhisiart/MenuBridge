@@ -118,6 +118,32 @@ func (p *Package) Execute(
 		slog.Warn("Sending data...", "data", data)
 
 		return data, false, err
+	case PLACE:
+		order := &database.Order{}
+
+		err := json.Unmarshal(p.Data, order)
+
+		if err != nil {
+			slog.Error(
+				"Unable to unmarshal the order",
+				"Command",
+				"Place",
+				"Data",
+				p.Data)
+
+			return nil, false, err
+		}
+
+		for _, item := range order.OrderItem {
+			if item.Id != 0 {
+				db.Update(ctx, item)
+
+				slog.Warn("OrderItem", "id", item.Id, "quantity", item.Quantity, "price", item.Price)
+			}
+		}
+
+		//send the order updated to all the clients
+		return nil, false, nil
 	default:
 		return nil, false, nil
 	}

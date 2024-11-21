@@ -51,7 +51,6 @@ func NewRelay(port uint16, uuid string) *Relay {
 
 func (r *Relay) Start() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {
-		slog.Warn("received a connection")
 		r.render(w, req)
 	})
 
