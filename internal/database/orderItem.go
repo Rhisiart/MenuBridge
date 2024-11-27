@@ -8,13 +8,26 @@ import (
 )
 
 type OrderItem struct {
-	Id       int     `json:"id"`
-	Quantity int     `json:"quantity"`
-	Price    float64 `json:"price"`
+	Id       int     `json:"id,omitempty"`
+	Quantity int     `json:"quantity,omitempty"`
+	Price    float64 `json:"price,omitempty"`
+	OrderId  int     `json:"orderId,omitempty"`
+	MenuId   int     `json:"menuId,omitempty"`
 }
 
 func (oi OrderItem) Create(ctx context.Context, db *sql.DB) error {
-	return nil
+	query := `INSERT INTO orderitem (customerorderid, menuid, quantity, price)
+				VALUES ($1, $2, $3, $4)`
+
+	_, err := db.ExecContext(
+		ctx,
+		query,
+		oi.OrderId,
+		oi.MenuId,
+		oi.Quantity,
+		oi.Price)
+
+	return err
 }
 
 func (oi OrderItem) Read(ctx context.Context, db *sql.DB) error {

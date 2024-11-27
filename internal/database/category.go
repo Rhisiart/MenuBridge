@@ -22,15 +22,15 @@ func NewCategory(id int, name string) *Category {
 	}
 }
 
-func (c Category) Create(ctx context.Context, db *sql.DB) error {
+func (c *Category) Create(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (c Category) Read(ctx context.Context, db *sql.DB) error {
+func (c *Category) Read(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (c Category) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
+func (c *Category) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
 	query := `SELECT 
 				c.id,
 				c.name,
@@ -90,10 +90,10 @@ func (c Category) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error
 	return list, nil
 }
 
-func (c Category) Update(ctx context.Context, db *sql.DB) error {
+func (c *Category) Update(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (c Category) Delete(ctx context.Context, db *sql.DB) error {
+func (c *Category) Delete(ctx context.Context, db *sql.DB) error {
 	return nil
 }

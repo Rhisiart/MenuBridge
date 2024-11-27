@@ -14,22 +14,22 @@ type Floor struct {
 	Tables []Table `json:"tables,omitempty"`
 }
 
-func NewFloor(id int, name string) Floor {
-	return Floor{
+func NewFloor(id int, name string) *Floor {
+	return &Floor{
 		Id:   id,
 		Name: name,
 	}
 }
 
-func (f Floor) Create(ctx context.Context, db *sql.DB) error {
+func (f *Floor) Create(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (f Floor) Read(ctx context.Context, db *sql.DB) error {
+func (f *Floor) Read(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (f Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
+func (f *Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
 	query := `SELECT 
 				f.id,
 				f.name,
@@ -43,7 +43,7 @@ func (f Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
 							SELECT JSON_BUILD_OBJECT('id', o.id)
 							FROM customerorder o
 							INNER JOIN floor_diningtable ft ON ft.id = o.floortableid
-							WHERE ft.floorid = f.id AND ft.diningtableid = dt.id
+							WHERE ft.floorid = f.id AND ft.diningtableid = dt.id AND o.statuscode = 'In Progress'
 						)
 					)
 				) AS Tables
@@ -86,10 +86,10 @@ func (f Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
 	return list, nil
 }
 
-func (f Floor) Update(ctx context.Context, db *sql.DB) error {
+func (f *Floor) Update(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (f Floor) Delete(ctx context.Context, db *sql.DB) error {
+func (f *Floor) Delete(ctx context.Context, db *sql.DB) error {
 	return nil
 }

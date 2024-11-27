@@ -82,7 +82,7 @@ func (p *Package) Execute(
 
 		return data, false, err
 	case FLOOR:
-		var f database.Floor
+		f := &database.Floor{}
 
 		floors, err := db.ReadAll(ctx, f)
 
@@ -99,23 +99,20 @@ func (p *Package) Execute(
 
 		return data, false, err
 	case ORDER:
+		slog.Warn("Received the command order...")
 		order := &database.Order{}
-
-		order.Unmarshal(p.Data)
-		err := db.Read(ctx, order)
+		orders, err := db.ReadAll(ctx, order)
 
 		if err != nil {
 			slog.Error(
-				"Unable to get the order",
+				"Unable to get the orders",
 				"Error",
 				err.Error())
 
 			return nil, false, err
 		}
 
-		data, err := json.Marshal(order)
-
-		slog.Warn("Sending data...", "data", data)
+		data, err := json.Marshal(orders)
 
 		return data, false, err
 	case PLACE:
@@ -134,16 +131,47 @@ func (p *Package) Execute(
 			return nil, false, err
 		}
 
-		for _, item := range order.OrderItem {
-			if item.Id != 0 {
-				db.Update(ctx, item)
+		if order.Id == 0 {
+			slog.Warn("Creating a order...")
+			err := db.Create(ctx, order)
 
-				slog.Warn("OrderItem", "id", item.Id, "quantity", item.Quantity, "price", item.Price)
+			if err != nil {
+				slog.Error("Unable to create order", "error", err.Error())
+
+				return nil, false, nil
 			}
+
+			slog.Warn("Order created!", "id", order.Id)
 		}
 
+		/*for _, item := range order.OrderItem {
+			var err error
+
+			if item.Id != 0 {
+				err = db.Update(ctx, item)
+			} else {
+				item.OrderId = order.Id
+				err = db.Create(ctx, item)
+			}
+
+			if err != nil {
+				slog.Error(
+					"Unable to update the order item",
+					"id",
+					item.Id,
+					"quantity",
+					item.Quantity,
+					"price",
+					item.Price)
+			} else {
+				slog.Warn("OrderItem", "id", item.Id, "quantity", item.Quantity, "price", item.Price)
+			}
+		}*/
+
+		data, errMarshal := json.Marshal(order)
+
 		//send the order updated to all the clients
-		return nil, false, nil
+		return data, true, errMarshal
 	default:
 		return nil, false, nil
 	}
