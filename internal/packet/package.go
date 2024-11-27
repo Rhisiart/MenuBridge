@@ -117,6 +117,7 @@ func (p *Package) Execute(
 		return data, false, err
 	case PLACE:
 		order := &database.Order{}
+		broadcast := false
 
 		err := json.Unmarshal(p.Data, order)
 
@@ -141,6 +142,7 @@ func (p *Package) Execute(
 				return nil, false, nil
 			}
 
+			broadcast = true
 			slog.Warn("Order created!", "id", order.Id)
 		}
 
@@ -171,7 +173,7 @@ func (p *Package) Execute(
 		data, errMarshal := json.Marshal(order)
 
 		//send the order updated to all the clients
-		return data, true, errMarshal
+		return data, broadcast, errMarshal
 	default:
 		return nil, false, nil
 	}

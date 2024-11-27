@@ -43,7 +43,7 @@ func (f *Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) 
 							SELECT JSON_BUILD_OBJECT('id', o.id)
 							FROM customerorder o
 							INNER JOIN floor_diningtable ft ON ft.id = o.floortableid
-							WHERE ft.floorid = f.id AND ft.diningtableid = dt.id AND o.statuscode = 'In Progress'
+							WHERE ft.id = t.id  AND o.statuscode = 'In Progress'
 						)
 					)
 				) AS Tables

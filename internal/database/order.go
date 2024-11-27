@@ -35,8 +35,8 @@ func (o *Order) Create(ctx context.Context, db *sql.DB) error {
 					FROM floor_diningtable ft
 					WHERE ft.floorid = $1 AND ft.diningtableid = $2 AND ft.number = $3
 				)
-				INSERT INTO customerorder (floortableid, customerid, amount, statuscode)
-				SELECT id, $4, $5, $6
+				INSERT INTO customerorder (floortableid, customerid, amount, statuscode, createdon)
+				SELECT id, $4, $5, $6, $7
 				FROM floor_table
 				RETURNING id`
 
@@ -48,7 +48,8 @@ func (o *Order) Create(ctx context.Context, db *sql.DB) error {
 		o.TableNumber,
 		o.CustomerId,
 		o.Amount,
-		o.Statuscode).Scan(&o.Id)
+		o.Statuscode,
+		o.CreatedOn).Scan(&o.Id)
 
 	return err
 }
