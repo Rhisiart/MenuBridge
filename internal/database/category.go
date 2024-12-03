@@ -22,6 +22,10 @@ func NewCategory(id int, name string) *Category {
 	}
 }
 
+func (c *Category) Transaction(ctx context.Context, db *sql.DB) error {
+	return nil
+}
+
 func (c *Category) Create(ctx context.Context, db *sql.DB) error {
 	return nil
 }

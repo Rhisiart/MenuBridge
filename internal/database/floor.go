@@ -21,6 +21,10 @@ func NewFloor(id int, name string) *Floor {
 	}
 }
 
+func (f *Floor) Transaction(ctx context.Context, db *sql.DB) error {
+	return nil
+}
+
 func (f *Floor) Create(ctx context.Context, db *sql.DB) error {
 	return nil
 }

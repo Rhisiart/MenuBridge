@@ -117,7 +117,7 @@ func (p *Package) Execute(
 		return data, false, err
 	case PLACE:
 		order := &database.Order{}
-		broadcast := false
+		broadcast := true
 
 		err := json.Unmarshal(p.Data, order)
 
@@ -132,18 +132,12 @@ func (p *Package) Execute(
 			return nil, false, err
 		}
 
-		if order.Id == 0 {
-			slog.Warn("Creating a order...")
-			err := db.Create(ctx, order)
+		err = db.Transaction(ctx, order)
 
-			if err != nil {
-				slog.Error("Unable to create order", "error", err.Error())
+		if err != nil {
+			slog.Error("Unable make a transation to order table", "error", err.Error())
 
-				return nil, false, nil
-			}
-
-			broadcast = true
-			slog.Warn("Order created!", "id", order.Id)
+			return nil, false, nil
 		}
 
 		/*for _, item := range order.OrderItem {

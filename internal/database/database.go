@@ -36,6 +36,10 @@ func (db *Database) Connect() error {
 	return nil
 }
 
+func (db *Database) Transaction(ctx context.Context, operation types.Table) error {
+	return operation.Transaction(ctx, db.database)
+}
+
 func (db *Database) Create(ctx context.Context, operation types.Table) error {
 	return operation.Create(ctx, db.database)
 }

@@ -11,6 +11,7 @@ type Encoded interface {
 }
 
 type Table interface {
+	Transaction(ctx context.Context, db *sql.DB) error
 	Create(ctx context.Context, db *sql.DB) error
 	Read(ctx context.Context, db *sql.DB) error
 	ReadAll(ctx context.Context, db *sql.DB) ([]Table, error)

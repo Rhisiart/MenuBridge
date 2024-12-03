@@ -3,20 +3,19 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	types "github.com/Rhisiart/MenuBridge/types/interface"
 )
 
 type Order struct {
-	Id          int         `json:"id,omitempty"`
-	CustomerId  int         `json:"customerId,omitempty"`
-	Amount      float64     `json:"amount,omitempty"`
-	Statuscode  string      `json:"statuscode,omitempty"`
-	CreatedOn   string      `json:"createdOn,omitempty"`
-	TableNumber int         `json:"tableNumber,omitempty"`
-	FloorId     int         `json:"floorId,omitempty"`
-	TableId     int         `json:"tableId,omitempty"`
-	OrderItem   []OrderItem `json:"orderItems,omitempty"`
+	Id         int         `json:"id,omitempty"`
+	CustomerId int         `json:"customerId,omitempty"`
+	Amount     float64     `json:"amount,omitempty"`
+	Statuscode string      `json:"statuscode,omitempty"`
+	CreatedOn  string      `json:"createdOn,omitempty"`
+	FloorTable FloorTable  `json:"floorTable,omitempty"`
+	OrderItem  []OrderItem `json:"orderItems,omitempty"`
 }
 
 func NewOrder(id int) *Order {
@@ -27,6 +26,18 @@ func NewOrder(id int) *Order {
 
 func (o *Order) Unmarshal(data []byte) {
 	o.Id = int(data[0])
+}
+
+func (o *Order) Transaction(ctx context.Context, db *sql.DB) error {
+	var err error
+
+	if o.Id == -1 {
+		err = o.Create(ctx, db)
+	} else {
+		err = o.Update(ctx, db)
+	}
+
+	return err
 }
 
 func (o *Order) Create(ctx context.Context, db *sql.DB) error {
@@ -43,9 +54,9 @@ func (o *Order) Create(ctx context.Context, db *sql.DB) error {
 	err := db.QueryRowContext(
 		ctx,
 		query,
-		o.FloorId,
-		o.TableId,
-		o.TableNumber,
+		o.FloorTable.FloorId,
+		o.FloorTable.TableId,
+		o.FloorTable.Number,
 		o.CustomerId,
 		o.Amount,
 		o.Statuscode,
@@ -61,17 +72,24 @@ func (o *Order) Read(ctx context.Context, db *sql.DB) error {
 func (o *Order) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
 	query := `SELECT 
 				o.id, 
+				o.amount, 
 				o.statuscode,
 				o.customerid,
 				o.createdon,
-				ft.floorid as floorId,
-				ft.diningtableid as tableId
+				JSON_BUILD_OBJECT(
+					'id', ft.id,
+					'number', ft.number,
+					'tableId', ft.diningtableid,
+					'floorId', ft.floorid
+				) AS floorTable
 			FROM
 				customerorder o
 			INNER JOIN
 				floor_diningtable ft ON ft.id = o.floortableid
 			WHERE
-    			o.createdon >= CURRENT_DATE AND o.statuscode = 'In Progress'`
+				o.createdon >= CURRENT_DATE AND o.statuscode = 'In Progress'
+			GROUP BY
+				o.id, ft.id`
 
 	rows, err := db.QueryContext(ctx, query)
 
@@ -84,15 +102,20 @@ func (o *Order) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) 
 	var list []types.Table
 
 	for rows.Next() {
+		var bytes []byte
 		newOrder := new(Order)
 
 		if err := rows.Scan(
 			&newOrder.Id,
+			&newOrder.Amount,
 			&newOrder.Statuscode,
 			&newOrder.CustomerId,
 			&newOrder.CreatedOn,
-			&newOrder.FloorId,
-			&newOrder.TableId); err != nil {
+			&bytes); err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(bytes, &newOrder.FloorTable); err != nil {
 			return nil, err
 		}
 
