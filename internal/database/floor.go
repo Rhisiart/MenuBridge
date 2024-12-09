@@ -39,28 +39,23 @@ func (f *Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) 
 				f.name,
 				JSON_AGG(
 					JSON_BUILD_OBJECT(
-						'id', dt.id,
-						'number', t.number,
-						'capacity', dt.capacity,
-						'status', t.Statuscode,
+						'id', ft.id,
+						'number', ft.number,
+						'capacity', t.capacity,
+						'status', ft.Statuscode,
 						'order', (
 							SELECT JSON_BUILD_OBJECT('id', o.id)
 							FROM customerorder o
-							INNER JOIN floor_diningtable ft ON ft.id = o.floortableid
-							WHERE ft.id = t.id  AND o.statuscode = 'In Progress'
+							INNER JOIN floor_diningtable fdt ON fdt.id = o.floortableid
+							WHERE fdt.id = ft.id AND o.statuscode = 'In Progress'
 						)
 					)
 				) AS Tables
-			FROM 
-				Floor f
-			INNER JOIN 
-				floor_diningtable t ON f.id = t.floorid
-			INNER JOIN
-				diningtable dt ON dt.id = t.diningtableid
-			GROUP BY 
-				f.id, f.name
-			ORDER BY
-				f.id`
+				FROM Floor f
+				INNER JOIN floor_diningtable ft ON f.id = ft.floorid
+				INNER JOIN diningtable t ON t.id = ft.diningtableid
+				GROUP BY f.id, f.name
+				ORDER BY f.id`
 
 	rows, err := db.QueryContext(ctx, query)
 

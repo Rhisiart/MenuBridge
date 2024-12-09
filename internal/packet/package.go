@@ -117,7 +117,6 @@ func (p *Package) Execute(
 		return data, false, err
 	case PLACE:
 		order := &database.Order{}
-		broadcast := true
 
 		err := json.Unmarshal(p.Data, order)
 
@@ -140,34 +139,9 @@ func (p *Package) Execute(
 			return nil, false, nil
 		}
 
-		/*for _, item := range order.OrderItem {
-			var err error
-
-			if item.Id != 0 {
-				err = db.Update(ctx, item)
-			} else {
-				item.OrderId = order.Id
-				err = db.Create(ctx, item)
-			}
-
-			if err != nil {
-				slog.Error(
-					"Unable to update the order item",
-					"id",
-					item.Id,
-					"quantity",
-					item.Quantity,
-					"price",
-					item.Price)
-			} else {
-				slog.Warn("OrderItem", "id", item.Id, "quantity", item.Quantity, "price", item.Price)
-			}
-		}*/
-
 		data, errMarshal := json.Marshal(order)
 
-		//send the order updated to all the clients
-		return data, broadcast, errMarshal
+		return data, true, errMarshal
 	default:
 		return nil, false, nil
 	}

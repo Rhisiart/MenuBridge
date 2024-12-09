@@ -15,7 +15,11 @@ type OrderItem struct {
 	MenuId   int     `json:"menuId,omitempty"`
 }
 
-func (oi OrderItem) Create(ctx context.Context, db *sql.DB) error {
+func (oi *OrderItem) Transaction(ctx context.Context, db *sql.DB) error {
+	return nil
+}
+
+func (oi *OrderItem) Create(ctx context.Context, db *sql.DB) error {
 	query := `INSERT INTO orderitem (customerorderid, menuid, quantity, price)
 				VALUES ($1, $2, $3, $4)`
 
@@ -30,15 +34,15 @@ func (oi OrderItem) Create(ctx context.Context, db *sql.DB) error {
 	return err
 }
 
-func (oi OrderItem) Read(ctx context.Context, db *sql.DB) error {
+func (oi *OrderItem) Read(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (oi OrderItem) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
+func (oi *OrderItem) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
 	return nil, nil
 }
 
-func (oi OrderItem) Update(ctx context.Context, db *sql.DB) error {
+func (oi *OrderItem) Update(ctx context.Context, db *sql.DB) error {
 	query := `UPDATE orderitem
 				SET quantity = $1, price = $2
 				WHERE id = $3`
@@ -48,6 +52,6 @@ func (oi OrderItem) Update(ctx context.Context, db *sql.DB) error {
 	return err
 }
 
-func (oi OrderItem) Delete(ctx context.Context, db *sql.DB) error {
+func (oi *OrderItem) Delete(ctx context.Context, db *sql.DB) error {
 	return nil
 }

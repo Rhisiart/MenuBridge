@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	types "github.com/Rhisiart/MenuBridge/types/interface"
 )
@@ -15,7 +17,7 @@ type Order struct {
 	Statuscode string      `json:"statuscode,omitempty"`
 	CreatedOn  string      `json:"createdOn,omitempty"`
 	FloorTable FloorTable  `json:"floorTable,omitempty"`
-	OrderItem  []OrderItem `json:"orderItems,omitempty"`
+	OrderItems []OrderItem `json:"orderItems,omitempty"`
 }
 
 func NewOrder(id int) *Order {
@@ -29,34 +31,82 @@ func (o *Order) Unmarshal(data []byte) {
 }
 
 func (o *Order) Transaction(ctx context.Context, db *sql.DB) error {
-	var err error
+	tx, err := db.Begin()
+
+	if err != nil {
+		return err
+	}
 
 	if o.Id == -1 {
-		err = o.Create(ctx, db)
+		err = o.CreateTx(ctx, tx)
 	} else {
-		err = o.Update(ctx, db)
+		err = o.UpdateTx(ctx, tx)
 	}
+
+	if err != nil && err != sql.ErrNoRows {
+		tx.Rollback()
+
+		return err
+	}
+
+	var transactionValues []string
+	var values []interface{}
+
+	for i, orderItem := range o.OrderItems {
+		transactionValues = append(transactionValues,
+			fmt.Sprintf("($%d, $%d, $%d, $%d)", i*4+1, i*4+2, i*4+3, i*4+4))
+
+		values = append(values, o.Id, orderItem.MenuId, orderItem.Quantity, orderItem.Price)
+	}
+
+	query := fmt.Sprintf(`
+		INSERT INTO orderitem (customerorderid, menuid, quantity, price)
+		VALUES %s
+		ON CONFLICT (customerorderid, menuid) 
+		DO UPDATE 
+		SET quantity = EXCLUDED.quantity, 
+		    price = EXCLUDED.price`,
+		strings.Join(transactionValues, ","))
+
+	_, err = tx.ExecContext(ctx, query, values...)
+
+	if err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	err = tx.Commit()
 
 	return err
 }
 
-func (o *Order) Create(ctx context.Context, db *sql.DB) error {
-	query := `WITH floor_table AS (
-					SELECT ft.id
-					FROM floor_diningtable ft
-					WHERE ft.floorid = $1 AND ft.diningtableid = $2 AND ft.number = $3
-				)
-				INSERT INTO customerorder (floortableid, customerid, amount, statuscode, createdon)
-				SELECT id, $4, $5, $6, $7
-				FROM floor_table
+func (o *Order) CreateTx(ctx context.Context, db *sql.Tx) error {
+	query := `INSERT INTO customerorder (floortableid, customerid, amount, statuscode, createdon)
+				Values($1, $2, $3, $4, $5)
 				RETURNING id`
 
 	err := db.QueryRowContext(
 		ctx,
 		query,
-		o.FloorTable.FloorId,
-		o.FloorTable.TableId,
-		o.FloorTable.Number,
+		o.FloorTable.Id,
+		o.CustomerId,
+		o.Amount,
+		o.Statuscode,
+		o.CreatedOn).Scan(&o.Id)
+
+	return err
+}
+
+func (o *Order) Create(ctx context.Context, db *sql.DB) error {
+	query := `INSERT INTO customerorder (floortableid, customerid, amount, statuscode, createdon)
+				Values($1, $2, $3, $4, $5)
+				RETURNING id`
+
+	err := db.QueryRowContext(
+		ctx,
+		query,
+		o.FloorTable.Id,
 		o.CustomerId,
 		o.Amount,
 		o.Statuscode,
@@ -125,8 +175,24 @@ func (o *Order) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) 
 	return list, nil
 }
 
+func (o *Order) UpdateTx(ctx context.Context, db *sql.Tx) error {
+	query := `UPDATE customerorder
+				SET amount = $2
+				WHERE id = $1`
+
+	_, err := db.ExecContext(ctx, query, o.Id, o.Amount)
+
+	return err
+}
+
 func (o *Order) Update(ctx context.Context, db *sql.DB) error {
-	return nil
+	query := `UPDATE customerorder
+				SET amount = $2
+				WHERE id = $1`
+
+	_, err := db.ExecContext(ctx, query, o.Id, o.Amount)
+
+	return err
 }
 
 func (o *Order) Delete(ctx context.Context, db *sql.DB) error {
