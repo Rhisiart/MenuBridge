@@ -30,63 +30,53 @@ func (o *Order) Unmarshal(data []byte) {
 	o.Id = int(data[0])
 }
 
-func (o *Order) Transaction(ctx context.Context, db *sql.DB) error {
-	tx, err := db.Begin()
+func (o *Order) Transaction(ctx context.Context, db *Database) error {
+	return db.Transaction(ctx, func(tx *sql.Tx) error {
+		var err error
 
-	if err != nil {
-		return err
-	}
+		if o.Id == -1 {
+			err = o.Create(ctx, tx)
+		} else {
+			err = o.Update(ctx, tx)
+		}
 
-	if o.Id == -1 {
-		err = o.CreateTx(ctx, tx)
-	} else {
-		err = o.UpdateTx(ctx, tx)
-	}
+		if err != nil && err != sql.ErrNoRows {
+			tx.Rollback()
 
-	if err != nil && err != sql.ErrNoRows {
-		tx.Rollback()
+			return err
+		}
 
-		return err
-	}
+		var transactionValues []string
+		var values []interface{}
 
-	var transactionValues []string
-	var values []interface{}
+		for i, orderItem := range o.OrderItems {
+			transactionValues = append(transactionValues,
+				fmt.Sprintf("($%d, $%d, $%d, $%d)", i*4+1, i*4+2, i*4+3, i*4+4))
 
-	for i, orderItem := range o.OrderItems {
-		transactionValues = append(transactionValues,
-			fmt.Sprintf("($%d, $%d, $%d, $%d)", i*4+1, i*4+2, i*4+3, i*4+4))
+			values = append(values, o.Id, orderItem.MenuId, orderItem.Quantity, orderItem.Price)
+		}
 
-		values = append(values, o.Id, orderItem.MenuId, orderItem.Quantity, orderItem.Price)
-	}
+		query := fmt.Sprintf(`
+			INSERT INTO orderitem (customerorderid, menuid, quantity, price)
+			VALUES %s
+			ON CONFLICT (customerorderid, menuid) 
+			DO UPDATE 
+			SET quantity = EXCLUDED.quantity, 
+				price = EXCLUDED.price`,
+			strings.Join(transactionValues, ","))
 
-	query := fmt.Sprintf(`
-		INSERT INTO orderitem (customerorderid, menuid, quantity, price)
-		VALUES %s
-		ON CONFLICT (customerorderid, menuid) 
-		DO UPDATE 
-		SET quantity = EXCLUDED.quantity, 
-		    price = EXCLUDED.price`,
-		strings.Join(transactionValues, ","))
-
-	_, err = tx.ExecContext(ctx, query, values...)
-
-	if err != nil {
-		tx.Rollback()
+		_, err = tx.ExecContext(ctx, query, values...)
 
 		return err
-	}
-
-	err = tx.Commit()
-
-	return err
+	})
 }
 
-func (o *Order) CreateTx(ctx context.Context, db *sql.Tx) error {
+func (o *Order) Create(ctx context.Context, exec types.Executor) error {
 	query := `INSERT INTO customerorder (floortableid, customerid, amount, statuscode, createdon)
 				Values($1, $2, $3, $4, $5)
 				RETURNING id`
 
-	err := db.QueryRowContext(
+	return exec.QueryRowContext(
 		ctx,
 		query,
 		o.FloorTable.Id,
@@ -94,32 +84,13 @@ func (o *Order) CreateTx(ctx context.Context, db *sql.Tx) error {
 		o.Amount,
 		o.Statuscode,
 		o.CreatedOn).Scan(&o.Id)
-
-	return err
 }
 
-func (o *Order) Create(ctx context.Context, db *sql.DB) error {
-	query := `INSERT INTO customerorder (floortableid, customerid, amount, statuscode, createdon)
-				Values($1, $2, $3, $4, $5)
-				RETURNING id`
-
-	err := db.QueryRowContext(
-		ctx,
-		query,
-		o.FloorTable.Id,
-		o.CustomerId,
-		o.Amount,
-		o.Statuscode,
-		o.CreatedOn).Scan(&o.Id)
-
-	return err
-}
-
-func (o *Order) Read(ctx context.Context, db *sql.DB) error {
+func (o *Order) Read(ctx context.Context, exec types.Executor) error {
 	return nil
 }
 
-func (o *Order) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
+func (o *Order) ReadAll(ctx context.Context, exec types.Executor) ([]types.Table, error) {
 	query := `SELECT 
 				o.id, 
 				o.amount, 
@@ -141,7 +112,7 @@ func (o *Order) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) 
 			GROUP BY
 				o.id, ft.id`
 
-	rows, err := db.QueryContext(ctx, query)
+	rows, err := exec.QueryContext(ctx, query)
 
 	if err != nil {
 		return nil, err
@@ -175,26 +146,16 @@ func (o *Order) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) 
 	return list, nil
 }
 
-func (o *Order) UpdateTx(ctx context.Context, db *sql.Tx) error {
+func (o *Order) Update(ctx context.Context, exec types.Executor) error {
 	query := `UPDATE customerorder
 				SET amount = $2
 				WHERE id = $1`
 
-	_, err := db.ExecContext(ctx, query, o.Id, o.Amount)
+	_, err := exec.ExecContext(ctx, query, o.Id, o.Amount)
 
 	return err
 }
 
-func (o *Order) Update(ctx context.Context, db *sql.DB) error {
-	query := `UPDATE customerorder
-				SET amount = $2
-				WHERE id = $1`
-
-	_, err := db.ExecContext(ctx, query, o.Id, o.Amount)
-
-	return err
-}
-
-func (o *Order) Delete(ctx context.Context, db *sql.DB) error {
+func (o *Order) Delete(ctx context.Context, exec types.Executor) error {
 	return nil
 }

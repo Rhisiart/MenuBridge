@@ -36,8 +36,27 @@ func (db *Database) Connect() error {
 	return nil
 }
 
-func (db *Database) Transaction(ctx context.Context, operation types.Table) error {
-	return operation.Transaction(ctx, db.database)
+func (db *Database) Transaction(ctx context.Context, fn func(tx *sql.Tx) error) error {
+	tx, err := db.database.BeginTx(ctx, nil)
+
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			tx.Rollback()
+			panic(p)
+		}
+	}()
+
+	if err := fn(tx); err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (db *Database) Create(ctx context.Context, operation types.Table) error {

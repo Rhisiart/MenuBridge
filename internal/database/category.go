@@ -26,15 +26,15 @@ func (c *Category) Transaction(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (c *Category) Create(ctx context.Context, db *sql.DB) error {
+func (c *Category) Create(ctx context.Context, exec types.Executor) error {
 	return nil
 }
 
-func (c *Category) Read(ctx context.Context, db *sql.DB) error {
+func (c *Category) Read(ctx context.Context, exec types.Executor) error {
 	return nil
 }
 
-func (c *Category) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
+func (c *Category) ReadAll(ctx context.Context, exec types.Executor) ([]types.Table, error) {
 	query := `SELECT 
 				c.id,
 				c.name,
@@ -66,7 +66,7 @@ func (c *Category) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, erro
 			ORDER BY 
 				c.id`
 
-	rows, err := db.QueryContext(ctx, query, c.OrderId)
+	rows, err := exec.QueryContext(ctx, query, c.OrderId)
 
 	if err != nil {
 		return nil, err
@@ -94,10 +94,10 @@ func (c *Category) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, erro
 	return list, nil
 }
 
-func (c *Category) Update(ctx context.Context, db *sql.DB) error {
+func (c *Category) Update(ctx context.Context, exec types.Executor) error {
 	return nil
 }
 
-func (c *Category) Delete(ctx context.Context, db *sql.DB) error {
+func (c *Category) Delete(ctx context.Context, exec types.Executor) error {
 	return nil
 }

@@ -131,7 +131,7 @@ func (p *Package) Execute(
 			return nil, false, err
 		}
 
-		err = db.Transaction(ctx, order)
+		err = order.Transaction(ctx, db)
 
 		if err != nil {
 			slog.Error("Unable make a transation to order table", "error", err.Error())

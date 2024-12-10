@@ -25,15 +25,15 @@ func (f *Floor) Transaction(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (f *Floor) Create(ctx context.Context, db *sql.DB) error {
+func (f *Floor) Create(ctx context.Context, exec types.Executor) error {
 	return nil
 }
 
-func (f *Floor) Read(ctx context.Context, db *sql.DB) error {
+func (f *Floor) Read(ctx context.Context, exec types.Executor) error {
 	return nil
 }
 
-func (f *Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) {
+func (f *Floor) ReadAll(ctx context.Context, exec types.Executor) ([]types.Table, error) {
 	query := `SELECT 
 				f.id,
 				f.name,
@@ -57,7 +57,7 @@ func (f *Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) 
 				GROUP BY f.id, f.name
 				ORDER BY f.id`
 
-	rows, err := db.QueryContext(ctx, query)
+	rows, err := exec.QueryContext(ctx, query)
 
 	if err != nil {
 		return nil, err
@@ -85,10 +85,10 @@ func (f *Floor) ReadAll(ctx context.Context, db *sql.DB) ([]types.Table, error) 
 	return list, nil
 }
 
-func (f *Floor) Update(ctx context.Context, db *sql.DB) error {
+func (f *Floor) Update(ctx context.Context, exec types.Executor) error {
 	return nil
 }
 
-func (f *Floor) Delete(ctx context.Context, db *sql.DB) error {
+func (f *Floor) Delete(ctx context.Context, exec types.Executor) error {
 	return nil
 }
