@@ -46,7 +46,7 @@ func (db *Database) Transaction(ctx context.Context, fn func(tx *sql.Tx) error) 
 	defer func() {
 		if p := recover(); p != nil {
 			tx.Rollback()
-			panic(p)
+			//panic(p)
 		}
 	}()
 
