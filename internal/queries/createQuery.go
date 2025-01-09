@@ -24,11 +24,15 @@ func (c *CreateQuery) setStatement(obj interface{}) error {
 
 	columns := t.Field(0).Tag.Get("db")
 	placeholders := fmt.Sprintf("$%d", 1)
-	var values []interface{}
+	values := []interface{}{v.Field(0).Interface()}
 
 	for i := 1; i < v.NumField(); i++ {
-		columns = strings.Join([]string{columns, t.Field(i).Tag.Get("db")}, ", ")
-		placeholders = strings.Join([]string{placeholders, fmt.Sprintf("$%d", i+1)}, ", ")
+		columns = strings.Join(
+			[]string{columns, t.Field(i).Tag.Get("db")},
+			", ")
+		placeholders = strings.Join(
+			[]string{placeholders, fmt.Sprintf("$%d", i+1)},
+			", ")
 		values = append(values, v.Field(i).Interface())
 	}
 
@@ -42,13 +46,13 @@ func (c *CreateQuery) setStatement(obj interface{}) error {
 	return nil
 }
 
-func (c *CreateQuery) setConditions() string {
-	return ""
+func (c *CreateQuery) setFilter(filters ...map[string]interface{}) {
 }
 
 func (c *CreateQuery) getQuery() Query {
 	return Query{
 		Statement: c.Statement,
+		Filter:    "",
 		Values:    c.Values,
 	}
 }

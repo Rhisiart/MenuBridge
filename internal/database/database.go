@@ -60,6 +60,9 @@ func (db *Database) Transaction(ctx context.Context, fn func(tx *sql.Tx) error) 
 }
 
 func (db *Database) Create(ctx context.Context, operation types.Table) error {
+	/*queryBuilder := queries.NewBuilder("Create", )
+	db.queryBuilder.SetBuilder("Create")*/
+
 	return operation.Create(ctx, db.database)
 }
 

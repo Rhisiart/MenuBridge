@@ -143,6 +143,9 @@ func (p *Package) Execute(
 		data, errMarshal := json.Marshal(order)
 
 		return data, true, errMarshal
+	case COMPLETE:
+		
+		return nil, false, nil
 	default:
 		return nil, false, nil
 	}
