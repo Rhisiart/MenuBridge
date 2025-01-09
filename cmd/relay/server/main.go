@@ -6,9 +6,11 @@ import (
 	"runtime"
 
 	"github.com/Rhisiart/MenuBridge/internal/config"
-	"github.com/Rhisiart/MenuBridge/internal/database"
-	"github.com/Rhisiart/MenuBridge/internal/packet"
-	"github.com/Rhisiart/MenuBridge/internal/relay"
+	"github.com/Rhisiart/MenuBridge/internal/server/packet"
+	"github.com/Rhisiart/MenuBridge/internal/server/relay"
+	"github.com/Rhisiart/MenuBridge/internal/service"
+	"github.com/Rhisiart/MenuBridge/internal/storage"
+	"github.com/Rhisiart/MenuBridge/internal/storage/postgres"
 )
 
 func main() {
@@ -23,7 +25,7 @@ func main() {
 		return
 	}
 
-	db := database.NewDatabase(config.DatabaseUrl)
+	db := postgres.NewDatabase(config.DatabaseUrl)
 	err = db.Connect()
 	defer db.Close()
 
@@ -32,10 +34,13 @@ func main() {
 		return
 	}
 
+	repository := storage.NewRepository(db.Database)
+	service := service.NewService(repository)
+
 	slog.Warn("port selected", "port", config.Port)
 	r := relay.NewRelay(uint16(config.Port), uuid)
 
-	go onMessage(r, db, ctx)
+	go onMessage(r, service, ctx)
 	go newConnections(r)
 
 	r.Start()
@@ -49,13 +54,13 @@ func newConnections(relay *relay.Relay) {
 	}
 }
 
-func onMessage(relay *relay.Relay, db *database.Database, ctx context.Context) {
+func onMessage(relay *relay.Relay, service *service.Service, ctx context.Context) {
 	for {
 		frame := <-relay.Packages()
 
 		slog.Warn("received frame", "Connection", frame.ConnId, "frame", frame.Pkg.Data)
 
-		data, broadcast, err := frame.Pkg.Execute(db, ctx)
+		data, broadcast, err := frame.Pkg.Execute(service, ctx)
 
 		if err != nil {
 			slog.Error(

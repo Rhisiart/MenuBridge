@@ -8,7 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/Rhisiart/MenuBridge/internal/packet"
+	"github.com/Rhisiart/MenuBridge/internal/server/packet"
 	"github.com/gorilla/websocket"
 )
 

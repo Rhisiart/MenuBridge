@@ -1,39 +1,24 @@
-package database
+package postgres
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
 
-	types "github.com/Rhisiart/MenuBridge/types/interface"
+	"github.com/Rhisiart/MenuBridge/internal/entities"
 )
 
-type Floor struct {
-	Id     int     `json:"id"`
-	Name   string  `json:"name"`
-	Tables []Table `json:"tables,omitempty"`
+type FloorRepository struct {
+	db *sql.DB
 }
 
-func NewFloor(id int, name string) *Floor {
-	return &Floor{
-		Id:   id,
-		Name: name,
+func NewFloorRepository(db *sql.DB) *FloorRepository {
+	return &FloorRepository{
+		db: db,
 	}
 }
 
-func (f *Floor) Transaction(ctx context.Context, db *sql.DB) error {
-	return nil
-}
-
-func (f *Floor) Create(ctx context.Context, exec types.Executor) error {
-	return nil
-}
-
-func (f *Floor) Read(ctx context.Context, exec types.Executor) error {
-	return nil
-}
-
-func (f *Floor) ReadAll(ctx context.Context, exec types.Executor) ([]types.Table, error) {
+func (f *FloorRepository) FindAll(ctx context.Context) ([]*entities.Floor, error) {
 	query := `SELECT 
 				f.id,
 				f.name,
@@ -57,7 +42,7 @@ func (f *Floor) ReadAll(ctx context.Context, exec types.Executor) ([]types.Table
 				GROUP BY f.id, f.name
 				ORDER BY f.id`
 
-	rows, err := exec.QueryContext(ctx, query)
+	rows, err := f.db.QueryContext(ctx, query)
 
 	if err != nil {
 		return nil, err
@@ -65,11 +50,11 @@ func (f *Floor) ReadAll(ctx context.Context, exec types.Executor) ([]types.Table
 
 	defer rows.Close()
 
-	var list []types.Table
+	list := make([]*entities.Floor, 0)
 
 	for rows.Next() {
 		var tables []byte
-		newFloor := new(Floor)
+		newFloor := new(entities.Floor)
 
 		if err := rows.Scan(&newFloor.Id, &newFloor.Name, &tables); err != nil {
 			return nil, err
@@ -83,12 +68,4 @@ func (f *Floor) ReadAll(ctx context.Context, exec types.Executor) ([]types.Table
 	}
 
 	return list, nil
-}
-
-func (f *Floor) Update(ctx context.Context, exec types.Executor) error {
-	return nil
-}
-
-func (f *Floor) Delete(ctx context.Context, exec types.Executor) error {
-	return nil
 }

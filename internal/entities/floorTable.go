@@ -1,4 +1,4 @@
-package database
+package entities
 
 type FloorTable struct {
 	Id      int `json:"id,omitempty"`

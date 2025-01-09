@@ -3,7 +3,7 @@ package relay
 import (
 	"log/slog"
 
-	"github.com/Rhisiart/MenuBridge/internal/packet"
+	"github.com/Rhisiart/MenuBridge/internal/server/packet"
 	"github.com/gorilla/websocket"
 )
 

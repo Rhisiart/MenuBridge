@@ -1,4 +1,4 @@
-package database
+package entities
 
 type Customer struct {
 	Id   int

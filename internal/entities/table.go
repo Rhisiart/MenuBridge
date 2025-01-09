@@ -1,4 +1,4 @@
-package database
+package entities
 
 type Table struct {
 	Id       int   `json:"id,omitempty"` //Id for the floor_dinnertable table

@@ -1,4 +1,4 @@
-package database
+package entities
 
 type Payment struct {
 	id    int

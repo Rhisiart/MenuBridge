@@ -1,4 +1,4 @@
-package database
+package entities
 
 type Menu struct {
 	Id          int        `json:"id" db:"id"`

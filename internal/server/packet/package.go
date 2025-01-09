@@ -6,7 +6,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/Rhisiart/MenuBridge/internal/database"
+	"github.com/Rhisiart/MenuBridge/internal/entities"
+	"github.com/Rhisiart/MenuBridge/internal/service"
 )
 
 const (
@@ -57,18 +58,14 @@ func (p *Package) Encode(idx int, seq byte) []byte {
 }
 
 func (p *Package) Execute(
-	db *database.Database,
+	service *service.Service,
 	ctx context.Context) ([]byte, bool, error) {
 	switch p.Types() {
 	case MENU:
-		order := &database.Order{}
-
+		order := &entities.Order{}
 		order.Unmarshal(p.Data)
-		m := &database.Category{
-			OrderId: order.Id,
-		}
 
-		menus, err := db.ReadAll(ctx, m)
+		menus, err := service.CategoryService.FindByOrderId(ctx, order.Id)
 
 		if err != nil {
 			slog.Error(
@@ -83,9 +80,7 @@ func (p *Package) Execute(
 
 		return data, false, err
 	case FLOOR:
-		f := &database.Floor{}
-
-		floors, err := db.ReadAll(ctx, f)
+		floors, err := service.FloorService.FindAll(ctx)
 
 		if err != nil {
 			slog.Error(
@@ -101,7 +96,7 @@ func (p *Package) Execute(
 		return data, false, err
 	case ORDER:
 		slog.Warn("Received the command order...")
-		order := &database.Order{}
+		order := &entities.Order{}
 		orders, err := db.ReadAll(ctx, order)
 
 		if err != nil {
@@ -117,7 +112,7 @@ func (p *Package) Execute(
 
 		return data, false, err
 	case PLACE:
-		order := &database.Order{}
+		order := &entities.Order{}
 
 		err := json.Unmarshal(p.Data, order)
 
@@ -144,7 +139,7 @@ func (p *Package) Execute(
 
 		return data, true, errMarshal
 	case COMPLETE:
-		
+
 		return nil, false, nil
 	default:
 		return nil, false, nil
