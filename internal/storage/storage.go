@@ -16,16 +16,26 @@ type CategoryRepository interface {
 }
 
 type FloorRepository interface {
-	FindAll(ctx context.Context) ([]entities.Floor, error)
+	FindAll(ctx context.Context) ([]*entities.Floor, error)
+}
+
+type OrderRepository interface {
+	FindAll(ctx context.Context) ([]*entities.Order, error)
+	Create(ctx context.Context, order *entities.Order) error
+	Update(ctx context.Context, order *entities.Order) error
+	Transaction(ctx context.Context, order *entities.Order) (*entities.Order, error)
 }
 
 type Repository struct {
 	CategoryRepository CategoryRepository
 	FloorRepository    FloorRepository
+	OrderRepository    OrderRepository
 }
 
 func NewRepository(db *sql.DB) *Repository {
 	return &Repository{
 		CategoryRepository: postgres.NewCategoryRepository(db),
+		FloorRepository:    postgres.NewFloorRepository(db),
+		OrderRepository:    postgres.NewOrderRepository(db),
 	}
 }

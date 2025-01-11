@@ -2,8 +2,8 @@ package domain
 
 import (
 	"context"
+	"encoding/json"
 
-	"github.com/Rhisiart/MenuBridge/internal/entities"
 	"github.com/Rhisiart/MenuBridge/internal/storage"
 )
 
@@ -17,6 +17,12 @@ func NewFloorService(floorRepo storage.FloorRepository) *FloorService {
 	}
 }
 
-func (f *FloorService) FindAll(ctx context.Context) ([]*entities.Floor, error) {
-	return nil, nil
+func (f *FloorService) FindAll(ctx context.Context) ([]byte, error) {
+	floors, err := f.floorRepository.FindAll(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(floors)
 }
