@@ -33,11 +33,22 @@ func (o *OrderService) UpsertWithOrderItems(ctx context.Context, data []byte) ([
 		return nil, err
 	}
 
-	newOrder, err := o.OrderRepository.Transaction(ctx, order)
+	newOrder, err := o.OrderRepository.UpsertOrderWithOrderItems(ctx, order)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return json.Marshal(newOrder)
+}
+
+func (o *OrderService) UpdateStatus(ctx context.Context, data []byte) error {
+	order := new(entities.Order)
+	err := json.Unmarshal(data, order)
+
+	if err != nil {
+		return err
+	}
+
+	return o.OrderRepository.UpdateStatus(ctx, order)
 }

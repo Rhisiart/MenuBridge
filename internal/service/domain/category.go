@@ -22,7 +22,11 @@ func (c *CategoryService) FindByOrderId(
 	ctx context.Context,
 	order []byte) ([]byte, error) {
 	newOrder := new(entities.Order)
-	newOrder.Unmarshal(order)
+	err := json.Unmarshal(order, newOrder)
+
+	if err != nil {
+		return nil, err
+	}
 
 	ctgr, err := c.categoryRepository.FindByOrderId(ctx, newOrder.Id)
 

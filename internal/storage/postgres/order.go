@@ -20,7 +20,7 @@ func NewOrderRepository(db *sql.DB) *OrderRepository {
 	}
 }
 
-func (o *OrderRepository) Transaction(ctx context.Context, order *entities.Order) (*entities.Order, error) {
+func (o *OrderRepository) UpsertOrderWithOrderItems(ctx context.Context, order *entities.Order) (*entities.Order, error) {
 	tx, err := o.db.BeginTx(ctx, nil)
 
 	if err != nil {
@@ -35,9 +35,24 @@ func (o *OrderRepository) Transaction(ctx context.Context, order *entities.Order
 	}()
 
 	if order.Id == -1 {
-		err = o.Create(ctx, order)
+		query := `INSERT INTO customerorder (floortableid, customerid, amount, statuscode, createdon)
+		Values($1, $2, $3, $4, $5)
+		RETURNING id`
+
+		err = tx.QueryRowContext(
+			ctx,
+			query,
+			order.FloorTable.Id,
+			order.CustomerId,
+			order.Amount,
+			order.Statuscode,
+			order.CreatedOn).Scan(&order.Id)
 	} else {
-		err = o.Update(ctx, order)
+		query := `UPDATE customerorder
+				SET amount = $2
+				WHERE id = $1`
+
+		_, err = tx.ExecContext(ctx, query, order.Id, order.Amount)
 	}
 
 	if err != nil && err != sql.ErrNoRows {
@@ -69,8 +84,7 @@ func (o *OrderRepository) Transaction(ctx context.Context, order *entities.Order
 
 	tx.Commit()
 
-	//TODO: return the result
-	return nil, nil
+	return order, err
 }
 
 func (o *OrderRepository) FindAll(ctx context.Context) ([]*entities.Order, error) {
@@ -146,12 +160,22 @@ func (o *OrderRepository) Create(
 		order.CreatedOn).Scan(&order.Id)
 }
 
-func (o *OrderRepository) Update(ctx context.Context, order *entities.Order) error {
+func (o *OrderRepository) UpdateAmount(ctx context.Context, order *entities.Order) error {
 	query := `UPDATE customerorder
 				SET amount = $2
 				WHERE id = $1`
 
 	_, err := o.db.ExecContext(ctx, query, order.Id, order.Amount)
+
+	return err
+}
+
+func (o *OrderRepository) UpdateStatus(ctx context.Context, order *entities.Order) error {
+	query := `UPDATE customerorder
+				SET statuscode = $2
+				WHERE id = $1`
+
+	_, err := o.db.ExecContext(ctx, query, order.Id, order.Statuscode)
 
 	return err
 }

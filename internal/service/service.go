@@ -18,6 +18,7 @@ type FloorService interface {
 type OrderService interface {
 	Create(ctx context.Context) ([]byte, error)
 	UpsertWithOrderItems(ctx context.Context, data []byte) ([]byte, error)
+	UpdateStatus(ctx context.Context, data []byte) error
 }
 
 type Service struct {

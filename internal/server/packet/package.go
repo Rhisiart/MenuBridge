@@ -71,8 +71,8 @@ func (p *Package) Execute(
 		data, err := service.OrderService.UpsertWithOrderItems(ctx, p.Data)
 		return data, true, err
 	case COMPLETE:
-
-		return nil, false, nil
+		err := service.OrderService.UpdateStatus(ctx, p.Data)
+		return nil, false, err
 	default:
 		return nil, false, nil
 	}

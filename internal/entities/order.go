@@ -9,7 +9,3 @@ type Order struct {
 	FloorTable FloorTable  `json:"floorTable,omitempty"`
 	OrderItems []OrderItem `json:"orderItems,omitempty"`
 }
-
-func (o *Order) Unmarshal(data []byte) {
-	o.Id = int(data[0])
-}

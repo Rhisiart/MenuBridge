@@ -22,8 +22,9 @@ type FloorRepository interface {
 type OrderRepository interface {
 	FindAll(ctx context.Context) ([]*entities.Order, error)
 	Create(ctx context.Context, order *entities.Order) error
-	Update(ctx context.Context, order *entities.Order) error
-	Transaction(ctx context.Context, order *entities.Order) (*entities.Order, error)
+	UpdateAmount(ctx context.Context, order *entities.Order) error
+	UpdateStatus(ctx context.Context, order *entities.Order) error
+	UpsertOrderWithOrderItems(ctx context.Context, order *entities.Order) (*entities.Order, error)
 }
 
 type Repository struct {
